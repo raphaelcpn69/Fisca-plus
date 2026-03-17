@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Fisca+</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#fff;--bg2:#f7f8fc;--bg3:#eef0f8;
+  --navy:#0d1b4b;--navy2:#162266;--blue:#1f3fa8;
+  --blue-light:#e8ecf9;--blue-mid:#c5cef4;
+  --text:#0d1b4b;--text2:#4a5480;--text3:#9aa0bc;
+  --border:#e2e5f0;--border2:#cdd1e8;
+  --green:#16a34a;--red:#dc2626;--orange:#ea580c;
+  --gold:#f59e0b;
+  --radius:16px;--radius-sm:10px;
+  --shadow:0 2px 12px rgba(13,27,75,.08);
+  --shadow-md:0 4px 24px rgba(13,27,75,.14);
+  --font:'Times New Roman',Times,serif;
+}
+html,body{height:100%;overflow:hidden;background:#e8eaf0;font-family:var(--font);color:var(--text)}
+#app{width:100%;height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;background:var(--bg);overflow:hidden;box-shadow:0 0 50px rgba(13,27,75,.2);position:relative}
+
+/* TOPBAR */
+#topbar{padding:12px 20px 10px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;z-index:20}
+.logo{font-family:var(--font);font-weight:700;font-size:22px;letter-spacing:-.3px;color:var(--navy);font-style:italic}
+.logo span{color:var(--blue)}
+.top-right{display:flex;align-items:center;gap:8px}
+.streak-pill{display:flex;align-items:center;gap:4px;background:var(--bg2);border:1px solid var(--border);padding:5px 10px;border-radius:20px;font-size:13px;font-weight:600;color:var(--navy);font-family:var(--font)}
+.xp-pill{background:var(--navy);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;font-family:var(--font)}
+
+/* SCREENS */
+#screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
+.screen.sl{transform:translateX(-100%)}
+.screen.sr{transform:translateX(100%)}
+.screen.sa{transform:translateX(0)}
+
+/* BOTTOM NAV */
+#bottomnav{display:flex;align-items:center;justify-content:space-around;padding:8px 0 18px;background:#fff;border-top:1px solid var(--border);flex-shrink:0;z-index:20}
+.nvi{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 20px;transition:.2s}
+.nvi svg{width:24px;height:24px;stroke:var(--text3);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:.2s}
+.nvi span{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;font-family:var(--font);transition:.2s}
+.nvi.active svg{stroke:var(--navy)}
+.nvi.active span{color:var(--navy)}
+
+/* =================== FEED =================== */
+#feed-screen{background:#000}
+.feed-wrap{flex:1;position:relative;overflow:hidden;touch-action:none}
+.vstack{position:absolute;inset:0}
+.vcard{position:absolute;inset:0;overflow:hidden;background:#0a1020;transition:transform .38s cubic-bezier(.4,0,.2,1)}
+.vcard.vdown{transform:translateY(100%)}
+.vbg{position:absolute;inset:0}
+.vgrad{position:absolute;inset:0}
+.villus{position:absolute;top:50%;left:50%;transform:translate(-50%,-62%);font-size:108px;filter:drop-shadow(0 16px 50px rgba(0,0,0,.5))}
+.voverlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.88) 0%,transparent 55%,rgba(0,0,0,.25) 100%)}
+.vprog{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15)}
+.vprogfill{height:100%;background:#fff;border-radius:2px;animation:vpa 20s linear infinite}
+@keyframes vpa{from{width:0}to{width:100%}}
+.vdots{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:5}
+.vdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);transition:.3s}
+.vdot.va{background:#fff;width:16px;border-radius:3px}
+.vcontent{position:absolute;bottom:0;left:0;right:66px;padding:18px}
+.vcat{display:inline-flex;align-items:center;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;color:#fff;letter-spacing:.7px;text-transform:uppercase;font-family:var(--font);margin-bottom:8px}
+.vtitle{font-family:var(--font);font-weight:700;font-size:18px;color:#fff;line-height:1.25;margin-bottom:6px;font-style:italic}
+.vdesc{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;margin-bottom:10px;font-family:var(--font)}
+.vauthor{display:flex;align-items:center;gap:8px}
+.vava{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:var(--font)}
+.vaname{font-size:13px;color:rgba(255,255,255,.85);font-family:var(--font)}
+.vdur{background:rgba(0,0,0,.4);backdrop-filter:blur(6px);padding:3px 8px;border-radius:12px;font-size:11px;color:rgba(255,255,255,.8);margin-left:auto;font-family:var(--font)}
+
+/* INSTAGRAM-STYLE REEL ACTIONS */
+.vactions{position:absolute;right:10px;bottom:80px;display:flex;flex-direction:column;align-items:center;gap:18px;z-index:5}
+.vact{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:.2s}
+.vact:active{transform:scale(.82)}
+.vact-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.vact-icon svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:.25s;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.vact.liked .vact-icon svg{stroke:#ff3b5c;fill:#ff3b5c}
+.vact-label{font-size:12px;color:rgba(255,255,255,.9);font-weight:600;font-family:var(--font);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.swipe-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;animation:bnt 2s ease-in-out infinite;pointer-events:none;z-index:5}
+.swipe-hint span{font-size:11px;color:rgba(255,255,255,.6);font-family:var(--font)}
+@keyframes bnt{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+
+/* =================== Q&R (DUOLINGO STYLE) =================== */
+#qr-screen{background:var(--bg2);overflow:hidden;display:flex;flex-direction:column}
+.qr-header{background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;padding:14px 20px 0}
+.qr-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.qr-title{font-family:var(--font);font-weight:700;font-size:20px;color:var(--navy);font-style:italic}
+.qr-lives{display:flex;gap:3px}
+.qr-life{font-size:15px;transition:.2s}
+.qr-life.dead{filter:grayscale(1);opacity:.25}
+.domain-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:0 -20px}
+.dtab{flex:1;padding:10px 4px;text-align:center;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;font-family:var(--font)}
+.dtab.active{color:var(--navy);border-bottom-color:var(--navy)}
+.qr-scroll{flex:1;overflow-y:auto;padding:0 0 20px}
+.qr-scroll::-webkit-scrollbar{display:none}
+
+/* SNAKE PATH */
+.snake-domain{padding:16px 20px 30px;position:relative;overflow:hidden}
+.domain-badge{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:8px 16px;border-radius:20px;font-family:var(--font);font-weight:700;font-size:13px;margin-bottom:22px;font-style:italic;position:relative;z-index:1}
+.domain-prog{font-size:11px;opacity:.7;font-weight:400}
+.snake-bg-deco{position:absolute;pointer-events:none;font-size:24px;opacity:.06;animation:snakefloat 4s ease-in-out infinite;z-index:0}
+@keyframes snakefloat{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-8px) rotate(5deg)}}
+.snake{position:relative;display:flex;flex-direction:column;gap:0;z-index:1}
+.snake-row{display:flex;justify-content:center;margin-bottom:4px;position:relative}
+.snake-row.pos-r{justify-content:flex-end;padding-right:44px}
+.snake-row.pos-l{justify-content:flex-start;padding-left:44px}
+.snake-row.pos-c{justify-content:center}
+.snake-conn{height:40px;position:relative;display:flex;align-items:center}
+.snake-conn svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.node-deco{position:absolute;font-size:16px;opacity:.4;pointer-events:none;animation:snakefloat 3.5s ease-in-out infinite}
+.lesson-node{width:72px;height:72px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:3px solid;position:relative;transition:.25s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
+.lesson-node:not(.locked):active{transform:scale(.88)}
+.lesson-node.done{background:#fff;border-color:var(--green);box-shadow:0 2px 12px rgba(22,163,74,.18)}
+.lesson-node.active-node{background:var(--navy);border-color:var(--navy);box-shadow:0 0 0 5px rgba(13,27,75,.15),0 4px 16px rgba(13,27,75,.25)}
+.lesson-node.locked{background:#f0f2f8;border-color:var(--border2);cursor:default}
+.lesson-node.checkpoint{background:linear-gradient(135deg,#f59e0b,#d97706);border-color:#d97706;width:80px;height:80px;box-shadow:0 0 0 5px rgba(245,158,11,.15)}
+.node-emoji{font-size:22px;line-height:1}
+.node-num{font-family:var(--font);font-weight:700;font-size:12px;margin-top:1px}
+.lesson-node.done .node-emoji{filter:grayscale(0)}
+.lesson-node.done .node-num{color:var(--green)}
+.lesson-node.active-node .node-num{color:#fff}
+.lesson-node.locked .node-emoji{filter:grayscale(1);opacity:.4}
+.lesson-node.locked .node-num{color:var(--text3)}
+.lesson-node.checkpoint .node-num{color:#fff;font-size:11px}
+.node-tip{position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:4px 10px;border-radius:8px;font-size:10px;white-space:nowrap;font-family:var(--font);z-index:10;box-shadow:var(--shadow);pointer-events:none}
+.node-tip::before{content:'';position:absolute;top:-4px;left:50%;transform:translateX(-50%);border:4px solid transparent;border-bottom-color:var(--navy);border-top:none}
+.active-bounce{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:14px;animation:nbounce 1s ease-in-out infinite}
+@keyframes nbounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+
+/* QUIZ OVERLAY */
+.quiz-overlay{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;max-width:430px;left:50%;transform:translateX(-50%) translateY(100%);transition:.35s cubic-bezier(.4,0,.2,1)}
+.quiz-overlay.show{transform:translateX(-50%) translateY(0)}
+.quiz-ov-top{padding:14px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border);background:#fff}
+.quiz-close{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
+.quiz-ov-info{flex:1}
+.quiz-ov-title{font-family:var(--font);font-weight:700;font-size:15px;color:var(--navy);font-style:italic}
+.quiz-ov-sub{font-size:11px;color:var(--text3)}
+.quiz-ov-lives{display:flex;gap:3px}
+.quiz-ov-life{font-size:14px}
+.quiz-ov-life.dead{filter:grayscale(1);opacity:.25}
+.qprogbar{height:8px;background:var(--bg3);margin:12px 20px;border-radius:4px;overflow:hidden;flex-shrink:0}
+.qprogfill{height:100%;background:var(--navy);border-radius:4px;transition:width .4s}
+.quiz-body{flex:1;overflow-y:auto;padding:16px 20px 100px}
+.quiz-body::-webkit-scrollbar{display:none}
+.qtype-badge{display:inline-block;background:var(--blue-light);color:var(--navy);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:12px;font-family:var(--font)}
+.qquestion{font-family:var(--font);font-weight:700;font-size:17px;color:var(--navy);line-height:1.4;margin-bottom:16px;font-style:italic}
+.qopts{display:flex;flex-direction:column;gap:10px}
+.qopt{padding:13px 16px;border-radius:var(--radius-sm);border:2px solid var(--border);font-size:15px;cursor:pointer;text-align:left;background:#fff;color:var(--text);font-family:var(--font);transition:.15s;line-height:1.4}
+.qopt:hover{border-color:var(--navy);background:var(--blue-light)}
+.qopt.correct{border-color:var(--green);background:#f0fdf4;color:#166534}
+.qopt.wrong{border-color:var(--red);background:#fef2f2;color:#991b1b}
+.qopt.disabled{pointer-events:none}
+
+/* Fill in blank */
+.fitb-sentence{font-family:var(--font);font-size:16px;color:var(--navy);line-height:2;margin-bottom:16px;font-style:italic}
+.fitb-blank{display:inline-block;min-width:80px;border-bottom:2px solid var(--navy);padding:2px 8px;text-align:center;font-weight:700;color:var(--blue);margin:0 4px;cursor:pointer;font-style:normal;vertical-align:middle}
+.fitb-blank.filled{background:var(--blue-light);border-radius:6px;border-bottom-color:var(--blue)}
+.fitb-blank.correct-blank{background:#f0fdf4;border-bottom-color:var(--green);color:var(--green)}
+.fitb-blank.wrong-blank{background:#fef2f2;border-bottom-color:var(--red);color:var(--red)}
+.word-bank{display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:12px}
+.word-chip{padding:8px 14px;border-radius:20px;border:2px solid var(--border2);background:#fff;font-size:14px;cursor:pointer;font-family:var(--font);transition:.15s;color:var(--navy)}
+.word-chip:hover{border-color:var(--navy);background:var(--blue-light)}
+.word-chip.used{opacity:.3;pointer-events:none}
+
+.qfeedback{padding:12px 14px;border-radius:var(--radius-sm);font-size:14px;margin-top:10px;display:none;line-height:1.5;font-family:var(--font)}
+.qfeedback.show{display:block}
+.qfeedback.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.qfeedback.bad{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+
+.quiz-footer{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:12px 20px 20px;background:#fff;border-top:1px solid var(--border);z-index:5}
+.btn-check{width:100%;padding:14px;border-radius:var(--radius-sm);background:var(--navy);border:none;color:#fff;font-family:var(--font);font-weight:700;font-size:15px;cursor:pointer;transition:.2s;letter-spacing:.3px}
+.btn-check:disabled{background:var(--bg3);color:var(--text3);cursor:default}
+.btn-check:not(:disabled):active{transform:scale(.97)}
+.btn-check.correct-btn{background:var(--green)}
+.btn-check.wrong-btn{background:var(--red)}
+
+/* XP POPUP */
+.xp-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--navy);border-radius:var(--radius);padding:22px 32px;text-align:center;z-index:200;transition:.28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:var(--shadow-md)}
+.xp-popup.show{transform:translate(-50%,-50%) scale(1)}
+.xp-big{font-family:var(--font);font-weight:700;font-size:42px;color:#fff;font-style:italic}
+.xp-sub{font-size:13px;color:rgba(255,255,255,.7);margin-top:2px;font-family:var(--font)}
+.xp-combo{font-family:var(--font);font-weight:700;font-size:17px;color:var(--gold);margin-top:6px}
+
+/* RESULT */
+.result-ov{position:fixed;inset:0;z-index:300;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px;transform:translateY(100%);transition:.38s cubic-bezier(.4,0,.2,1);max-width:430px;left:50%;transform:translateX(-50%) translateY(100%)}
+.result-ov.show{transform:translateX(-50%) translateY(0)}
+.result-emoji{font-size:70px;margin-bottom:12px}
+.result-title{font-family:var(--font);font-weight:700;font-size:26px;color:var(--navy);text-align:center;margin-bottom:6px;font-style:italic}
+.result-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:22px;font-family:var(--font)}
+.result-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;width:100%;margin-bottom:26px}
+.rs{background:var(--bg2);border-radius:var(--radius-sm);padding:13px;text-align:center;border:1px solid var(--border)}
+.rs-val{font-family:var(--font);font-weight:700;font-size:22px;color:var(--navy);font-style:italic}
+.rs-lbl{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--font)}
+.btn-rst{padding:14px;border-radius:var(--radius-sm);background:var(--navy);border:none;color:#fff;font-family:var(--font);font-weight:700;font-size:15px;cursor:pointer;width:100%;margin-bottom:10px}
+.btn-rst-sec{background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;padding:8px;font-family:var(--font)}
+
+/* =================== FORMATIONS =================== */
+#form-screen{background:var(--bg2);overflow:hidden;display:flex;flex-direction:column}
+.form-scroll{flex:1;overflow-y:auto}
+.form-scroll::-webkit-scrollbar{display:none}
+.form-hdr{background:#fff;border-bottom:1px solid var(--border);padding:14px 20px 12px;flex-shrink:0}
+.form-hdr h2{font-family:var(--font);font-weight:700;font-size:22px;color:var(--navy);font-style:italic}
+.form-hdr p{font-size:13px;color:var(--text2);margin-top:2px;font-family:var(--font)}
+.level-tabs{display:flex;gap:0;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
+.ltab{flex:1;padding:10px 6px;text-align:center;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;font-family:var(--font)}
+.ltab.active{color:var(--navy);border-bottom-color:var(--navy)}
+
+/* Interactive compound interest chart block */
+.ci-block{margin:14px 16px 4px;background:var(--navy);border-radius:var(--radius);overflow:hidden}
+.ci-inner{padding:16px}
+.ci-badge{display:inline-block;background:var(--gold);color:var(--navy);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:8px;font-family:var(--font);letter-spacing:.5px}
+.ci-title{font-family:var(--font);font-weight:700;font-size:16px;color:#fff;font-style:italic;margin-bottom:3px;line-height:1.3}
+.ci-sub{font-size:11px;color:rgba(255,255,255,.65);margin-bottom:12px;font-family:var(--font);line-height:1.5}
+.ci-plan-tabs{display:flex;gap:5px;margin-bottom:12px}
+.ci-ptab{flex:1;padding:7px 3px;border-radius:var(--radius-sm);text-align:center;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);transition:.2s;line-height:1.3}
+.ci-ptab.active{background:#fff;color:var(--navy);border-color:#fff}
+.ci-stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.ci-s{background:rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:8px 4px;text-align:center}
+.ci-sv{font-family:var(--font);font-weight:700;font-size:15px;color:#fff;font-style:italic}
+.ci-sl{font-size:9px;color:rgba(255,255,255,.55);font-family:var(--font);margin-top:1px}
+.ci-sliders{display:flex;flex-direction:column;gap:9px;margin-bottom:12px}
+.ci-srow{display:flex;align-items:center;gap:7px}
+.ci-slbl{font-size:11px;color:rgba(255,255,255,.65);font-family:var(--font);width:86px;flex-shrink:0}
+.ci-sval{font-size:11px;font-weight:700;color:#fff;font-family:var(--font);width:54px;text-align:right;flex-shrink:0}
+input.ci-range{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(255,255,255,.25);outline:none;cursor:pointer}
+input.ci-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+input.ci-range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;cursor:pointer;border:none}
+.ci-chart-wrap{position:relative;height:150px;margin-bottom:8px}
+.ci-legend{display:flex;gap:14px;margin-bottom:10px}
+.ci-leg{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.65);font-family:var(--font)}
+.ci-leg-dot{width:10px;height:3px;border-radius:2px;flex-shrink:0}
+.ci-btn{width:100%;padding:10px;border-radius:var(--radius-sm);background:#fff;border:none;color:var(--navy);font-family:var(--font);font-weight:700;font-size:12px;cursor:pointer;transition:.2s}
+.ci-btn:active{opacity:.85}
+
+.flist{padding:10px 16px 20px;display:flex;flex-direction:column;gap:12px}
+.fcard{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:.2s}
+.fcard:active{transform:scale(.99)}
+.fbanner{height:90px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.fbanner-price{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:3px 9px;border-radius:12px;font-family:var(--font);font-weight:700;font-size:12px;color:#fff}
+.fbanner-price.free{background:rgba(22,163,74,.9)}
+.fbanner-lvl{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:var(--font)}
+.lvl-d{background:#dcfce7;color:#166534}
+.lvl-i{background:#fef9c3;color:#854d0e}
+.lvl-a{background:#fee2e2;color:#991b1b}
+.fbody{padding:13px}
+.ftitle{font-family:var(--font);font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px;font-style:italic}
+.fdesc{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:10px;font-family:var(--font)}
+.fmeta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.fauthor{display:flex;align-items:center;gap:7px}
+.fava{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;font-family:var(--font)}
+.faname{font-size:12px;color:var(--text2);font-family:var(--font)}
+.fstats{display:flex;gap:10px}
+.fstat{font-size:11px;color:var(--text3);font-family:var(--font)}
+.fbtn{width:100%;margin-top:10px;padding:11px;border-radius:var(--radius-sm);border:none;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;background:var(--navy);color:#fff;transition:.2s}
+.fbtn:active{transform:scale(.97);opacity:.9}
+
+/* COURSE VIEWER */
+.course-ov{position:fixed;inset:0;z-index:150;background:#fff;display:flex;flex-direction:column;max-width:430px;left:50%;transform:translateX(-50%) translateY(100%);transition:.38s cubic-bezier(.4,0,.2,1)}
+.course-ov.show{transform:translateX(-50%) translateY(0)}
+.course-top{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border);background:#fff;flex-shrink:0}
+.course-back{width:34px;height:34px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;font-family:var(--font)}
+.course-top-info{flex:1}
+.ctitle{font-family:var(--font);font-weight:700;font-size:15px;color:var(--navy);font-style:italic}
+.csub{font-size:11px;color:var(--text3);font-family:var(--font)}
+.cprog-ring{flex-shrink:0;position:relative;width:38px;height:38px}
+.cprog-ring svg{transform:rotate(-90deg)}
+.cprog-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font);font-weight:700;font-size:11px;color:var(--navy)}
+.ctabs{display:flex;background:var(--bg2);padding:3px;margin:10px 16px;border-radius:var(--radius-sm);flex-shrink:0}
+.ctab{flex:1;padding:7px;border-radius:8px;text-align:center;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;transition:.2s;font-family:var(--font)}
+.ctab.active{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(13,27,75,.1)}
+.cbody{flex:1;overflow-y:auto;padding:0 16px 30px}
+.cbody::-webkit-scrollbar{display:none}
+.mod-item{display:flex;gap:12px;padding:11px;border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;border:1px solid var(--border);background:#fff;transition:.2s}
+.mod-item:hover{border-color:var(--navy)}
+.mod-item.done{border-color:rgba(22,163,74,.4);background:#f0fdf4}
+.mod-item.cur{border-color:var(--navy);background:var(--blue-light)}
+.mod-num{width:34px;height:34px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font);font-weight:700;font-size:12px;color:var(--text2);flex-shrink:0}
+.mod-item.done .mod-num{background:var(--green);border-color:var(--green);color:#fff}
+.mod-item.cur .mod-num{background:var(--navy);border-color:var(--navy);color:#fff}
+.mod-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:2px;font-family:var(--font)}
+.mod-dur{font-size:12px;color:var(--text3);font-family:var(--font)}
+.mod-action{font-size:15px;flex-shrink:0;align-self:center}
+.lesson-hero{background:var(--navy);border-radius:var(--radius);padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
+.lesson-hero-bg{position:absolute;inset:0;font-size:110px;display:flex;align-items:center;justify-content:center;opacity:.07}
+.lesson-hero h3{font-family:var(--font);font-weight:700;font-size:17px;color:#fff;margin-bottom:5px;font-style:italic;position:relative}
+.lesson-hero p{font-size:13px;color:rgba(255,255,255,.7);line-height:1.5;position:relative;font-family:var(--font)}
+.lsec{margin-bottom:18px}
+.lsec-title{font-family:var(--font);font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:8px;font-style:italic}
+.lsec-title::before{content:'';display:block;width:4px;height:15px;background:var(--navy);border-radius:2px}
+.ltext{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:8px;font-family:var(--font)}
+.lcard{background:var(--bg2);border-radius:var(--radius-sm);padding:13px;margin-bottom:8px;border-left:3px solid var(--navy)}
+.lcard-t{font-family:var(--font);font-weight:700;font-size:13px;color:var(--navy);margin-bottom:3px}
+.lcard-b{font-size:13px;color:var(--text2);line-height:1.5;font-family:var(--font)}
+.ltip{background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:var(--radius-sm);padding:11px;margin:10px 0;display:flex;gap:8px}
+.ltip-text{font-size:13px;color:var(--navy);line-height:1.5;font-family:var(--font)}
+.lformula{background:var(--navy);border-radius:var(--radius-sm);padding:13px;margin:10px 0;text-align:center}
+.lformula-t{font-family:var(--font);font-weight:700;font-size:15px;color:#fff;font-style:italic}
+.lformula-l{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px;font-family:var(--font)}
+.ltable{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+.ltable th{background:var(--navy);color:#fff;padding:7px 8px;text-align:left;font-family:var(--font);font-size:11px}
+.ltable td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text2);font-family:var(--font)}
+.ltable tr:nth-child(even) td{background:var(--bg2)}
+.lesson-done-btn{width:100%;padding:13px;border-radius:var(--radius-sm);background:var(--navy);border:none;color:#fff;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;margin-top:14px;transition:.2s}
+.lesson-done-btn:active{transform:scale(.97)}
+
+/* PANELS */
+.panel{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;max-width:430px;left:50%;transform:translateX(-50%)}
+.poverlay{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;transition:.3s;cursor:pointer}
+.pcontent{background:#fff;border-radius:22px 22px 0 0;padding:0 20px 28px;max-height:68vh;overflow-y:auto;transform:translateY(100%);transition:.32s cubic-bezier(.4,0,.2,1);box-shadow:0 -4px 30px rgba(13,27,75,.15)}
+.panel.open{pointer-events:auto}
+.panel.open .poverlay{opacity:1}
+.panel.open .pcontent{transform:translateY(0)}
+.phandle{width:30px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 14px}
+.ptitle{font-family:var(--font);font-weight:700;font-size:17px;color:var(--navy);margin-bottom:12px;font-style:italic}
+.cmt{display:flex;gap:10px;margin-bottom:13px}
+.cava{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;font-family:var(--font)}
+.cname{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px;font-family:var(--font)}
+.ctext{font-size:13px;color:var(--text2);line-height:1.5;font-family:var(--font)}
+.ctime{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--font)}
+.cmt-input{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border)}
+.cmt-input input{flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:20px;padding:9px 14px;color:var(--navy);font-size:13px;outline:none;font-family:var(--font)}
+.cmt-input input:focus{border-color:var(--navy)}
+.cmt-input button{width:36px;height:36px;border-radius:50%;background:var(--navy);border:none;color:#fff;font-size:15px;cursor:pointer;flex-shrink:0}
+
+/* Toast */
+.toast{position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:500;white-space:nowrap;box-shadow:var(--shadow-md);max-width:80%;text-align:center;font-family:var(--font)}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="topbar">
+  <div class="logo"><em>Fisca<span>+</span></em></div>
+  <div class="top-right">
+    <div class="streak-pill">🔥 <span id="streak-n">7</span></div>
+    <div class="xp-pill" id="xp-disp">⚡ 340 XP</div>
+  </div>
+</div>
+
+<div id="screens">
+
+  <!-- ============ FEED ============ -->
+  <div class="screen sl" id="feed-screen">
+    <div class="feed-wrap" id="feedWrap">
+      <div class="vstack" id="vstack"></div>
+      <div class="vdots" id="vdots"></div>
+      <div class="swipe-hint" id="swipeHint"><span>↑ Glisser vers le haut</span></div>
+    </div>
+    <div class="panel" id="cmtPanel">
+      <div class="poverlay" onclick="closePanel('cmtPanel')"></div>
+      <div class="pcontent">
+        <div class="phandle"></div>
+        <div class="ptitle">Commentaires <span style="color:var(--text3);font-size:13px">(128)</span></div>
+        <div id="cmt-list"></div>
+        <div class="cmt-input"><input type="text" placeholder="Ajouter un commentaire…" id="cmtInput"><button onclick="postCmt()">↑</button></div>
+      </div>
+    </div>
+    <div class="panel" id="sharePanel">
+      <div class="poverlay" onclick="closePanel('sharePanel')"></div>
+      <div class="pcontent">
+        <div class="phandle"></div>
+        <div class="ptitle">Partager</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+          <div style="text-align:center;cursor:pointer" onclick="shareAct('WhatsApp')"><div style="width:50px;height:50px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 5px">💬</div><span style="font-size:11px;color:var(--text2);font-family:var(--font)">WhatsApp</span></div>
+          <div style="text-align:center;cursor:pointer" onclick="shareAct('Instagram')"><div style="width:50px;height:50px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 5px">📸</div><span style="font-size:11px;color:var(--text2);font-family:var(--font)">Instagram</span></div>
+          <div style="text-align:center;cursor:pointer" onclick="shareAct('Twitter')"><div style="width:50px;height:50px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 5px">🐦</div><span style="font-size:11px;color:var(--text2);font-family:var(--font)">Twitter/X</span></div>
+          <div style="text-align:center;cursor:pointer" onclick="shareAct('Lien')"><div style="width:50px;height:50px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 5px">🔗</div><span style="font-size:11px;color:var(--text2);font-family:var(--font)">Copier</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Q&R ============ -->
+  <div class="screen sa" id="qr-screen">
+    <div class="qr-header">
+      <div class="qr-header-row">
+        <div class="qr-title"><em>Quiz & Q&R</em></div>
+        <div class="qr-lives" id="qr-lives"></div>
+      </div>
+      <div class="domain-tabs">
+        <div class="dtab active" id="dtab-fisc" onclick="setDomain('fiscalite')">Fiscalité</div>
+        <div class="dtab" id="dtab-fin" onclick="setDomain('finance')">Finance</div>
+        <div class="dtab" id="dtab-eco" onclick="setDomain('economie')">Économie</div>
+      </div>
+    </div>
+    <div class="qr-scroll" id="qrScroll">
+      <div id="snakeContainer"></div>
+    </div>
+  </div>
+
+  <!-- ============ FORMATIONS ============ -->
+  <div class="screen sr" id="form-screen">
+    <div style="background:#fff;flex-shrink:0">
+      <div class="form-hdr"><h2><em>Formations</em></h2><p>Apprends à ton rythme avec nos experts</p></div>
+      <div class="level-tabs" id="levelTabs"></div>
+    </div>
+    <div class="form-scroll" id="formScroll">
+      <div id="formList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- XP POPUP -->
+<div class="xp-popup" id="xpPopup"><div class="xp-big" id="xpAmt">+50 XP</div><div class="xp-sub">Bonne réponse !</div><div class="xp-combo" id="xpCombo"></div></div>
+
+<!-- QUIZ OVERLAY -->
+<div class="quiz-overlay" id="quizOv">
+  <div class="quiz-ov-top">
+    <div class="quiz-close" onclick="closeQuiz()">✕</div>
+    <div class="quiz-ov-info"><div class="quiz-ov-title" id="qovTitle"></div><div class="quiz-ov-sub" id="qovSub"></div></div>
+    <div class="quiz-ov-lives" id="qovLives"></div>
+  </div>
+  <div class="qprogbar"><div class="qprogfill" id="qprogfill" style="width:10%"></div></div>
+  <div class="quiz-body" id="quizBody"></div>
+  <div class="quiz-footer">
+    <button class="btn-check" id="btnCheck" onclick="checkAnswer()" disabled>Vérifier</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="result-ov" id="resultOv">
+  <div class="result-emoji" id="resEmoji">🎉</div>
+  <div class="result-title" id="resTitle">Excellent !</div>
+  <div class="result-sub" id="resSub"></div>
+  <div id="res-unlock-msg" style="display:none;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--font);font-size:13px;color:var(--navy);text-align:center;width:100%;margin-bottom:14px;font-weight:700"></div>
+  <div class="result-stats">
+    <div class="rs"><div class="rs-val" id="rs-score"></div><div class="rs-lbl">Score</div></div>
+    <div class="rs"><div class="rs-val" id="rs-xp" style="color:var(--blue)"></div><div class="rs-lbl">XP gagnés</div></div>
+    <div class="rs"><div class="rs-val" id="rs-streak">🔥7</div><div class="rs-lbl">Série</div></div>
+  </div>
+  <button class="btn-rst" id="btnSuivant" onclick="goNextLevel()">Suivant →</button>
+  <button class="btn-rst-sec" onclick="replayQuiz()">Rejouer ce niveau</button>
+</div>
+
+<!-- COURSE OVERLAY -->
+<div class="course-ov" id="courseOv">
+  <div class="course-top">
+    <div class="course-back" onclick="closeCourse()">←</div>
+    <div class="course-top-info"><div class="ctitle" id="ctitleEl"></div><div class="csub" id="csubEl"></div></div>
+    <div class="cprog-ring">
+      <svg width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="15" fill="none" stroke="var(--border2)" stroke-width="3"/><circle cx="19" cy="19" r="15" fill="none" stroke="var(--navy)" stroke-width="3" stroke-dasharray="94.2" stroke-dashoffset="94.2" id="cprogCircle" stroke-linecap="round"/></svg>
+      <div class="cprog-label" id="cprogLabel">0%</div>
+    </div>
+  </div>
+  <div class="ctabs">
+    <div class="ctab active" id="ctab-mods" onclick="showCTab('mods')">Modules</div>
+    <div class="ctab" id="ctab-lesson" onclick="showCTab('lesson')">Cours</div>
+    <div class="ctab" id="ctab-infos" onclick="showCTab('infos')">Infos</div>
+  </div>
+  <div class="cbody" id="courseBody"></div>
+</div>
+
+<div id="bottomnav">
+  <div class="nvi" id="nav-feed" onclick="switchScreen('feed')">
+    <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+    <span>Vidéos</span>
+  </div>
+  <div class="nvi active" id="nav-qr" onclick="switchScreen('qr')">
+    <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>Q&R</span>
+  </div>
+  <div class="nvi" id="nav-form" onclick="switchScreen('form')">
+    <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    <span>Formations</span>
+  </div>
+</div>
+</div>
+
+<script>
+// ==================== DATA ====================
+
+const VIDEOS=[
+  {id:0,cat:"Épargne",title:"Les intérêts composés : la magie du temps",desc:"Pourquoi investir 100€/mois à 25 ans vaut mieux que 200€/mois à 35 ans.",author:"Marie Dubois",ini:"MD",c1:"#0d1b4b",c2:"#1e2f7a",emoji:"💰",dur:"3:42"},
+  {id:1,cat:"Bourse",title:"CAC 40 : comprendre l'indice en 60s",desc:"Comment est calculé l'indice phare de la Bourse de Paris ?",author:"Thomas Laurent",ini:"TL",c1:"#0a1530",c2:"#152560",emoji:"📈",dur:"2:15"},
+  {id:2,cat:"Fiscalité",title:"PFU : la flat tax expliquée",desc:"30% sur vos revenus du capital : ce que ça signifie vraiment.",author:"Camille Petit",ini:"CP",c1:"#1a0d0d",c2:"#3a1010",emoji:"⚖️",dur:"4:10"},
+  {id:3,cat:"Crypto",title:"DCA : la stratégie anti-stress",desc:"Dollar Cost Averaging pour lisser la volatilité crypto.",author:"Alex Chen",ini:"AC",c1:"#041a14",c2:"#093828",emoji:"🔗",dur:"3:28"},
+  {id:4,cat:"Immobilier",title:"L'effet de levier immobilier",desc:"Comment emprunter intelligemment pour investir dans la pierre.",author:"Sophie Martin",ini:"SM",c1:"#0d1b4b",c2:"#0d3060",emoji:"🏠",dur:"5:02"},
+  {id:5,cat:"Budget",title:"La règle 50/30/20",desc:"Allouer ses revenus pour épargner sans se priver.",author:"Marie Dubois",ini:"MD",c1:"#1a1010",c2:"#2a1020",emoji:"💸",dur:"2:55"},
+  {id:6,cat:"Retraite",title:"Combien faut-il pour partir en retraite ?",desc:"Calculer son capital retraite selon son train de vie.",author:"Sophie Martin",ini:"SM",c1:"#0a1520",c2:"#0d2a40",emoji:"🧓",dur:"6:15"},
+  {id:7,cat:"Fiscalité",title:"Optimiser son PEA en 5 étapes",desc:"PEA vs compte-titres : les vraies différences fiscales.",author:"Thomas Laurent",ini:"TL",c1:"#0d1b4b",c2:"#1a2a6a",emoji:"📊",dur:"4:33"},
+  {id:8,cat:"Épargne",title:"Livret A vs assurance-vie",desc:"Liquidité, rendement, fiscalité : le comparatif complet.",author:"Camille Petit",ini:"CP",c1:"#0a1a10",c2:"#0d3020",emoji:"🏦",dur:"3:18"},
+  {id:9,cat:"Bourse",title:"Qu'est-ce qu'un ETF ?",desc:"Les fonds indiciels cotés expliqués simplement.",author:"Alex Chen",ini:"AC",c1:"#0d1b4b",c2:"#162266",emoji:"🌍",dur:"3:50"},
+  {id:10,cat:"Économie",title:"L'inflation expliquée",desc:"Pourquoi vos 100€ valent moins chaque année et comment s'en protéger.",author:"Marie Dubois",ini:"MD",c1:"#0a1010",c2:"#1a2010",emoji:"📉",dur:"4:20"},
+  {id:11,cat:"Fiscalité",title:"Comprendre sa TMI",desc:"Tranche marginale d'imposition, taux moyen, décote : tout comprendre.",author:"Thomas Laurent",ini:"TL",c1:"#1a0d0d",c2:"#2a1515",emoji:"🧮",dur:"4:05"},
+  {id:12,cat:"Crypto",title:"Bitcoin : pourquoi 21 millions ?",desc:"La politique monétaire de Bitcoin et l'importance de la rareté.",author:"Alex Chen",ini:"AC",c1:"#0a0a1a",c2:"#101030",emoji:"₿",dur:"3:12"},
+  {id:13,cat:"Immobilier",title:"SCPI : la pierre-papier expliquée",desc:"Investir en immobilier sans les contraintes de la gestion.",author:"Sophie Martin",ini:"SM",c1:"#0d1b4b",c2:"#1a3060",emoji:"🏢",dur:"4:44"},
+  {id:14,cat:"Économie",title:"Les taux directeurs de la BCE",desc:"Comment les taux d'intérêt de la banque centrale impactent votre vie.",author:"Camille Petit",ini:"CP",c1:"#041020",c2:"#082040",emoji:"🏛️",dur:"5:10"},
+];
+
+const COMMENTS=[
+  {name:"Léa M.",ini:"LM",bg:"#e8ecf9",c:"#0d1b4b",text:"Super explication ! Enfin compris les intérêts composés",time:"il y a 2h"},
+  {name:"Karim B.",ini:"KB",bg:"#e8f4f0",c:"#0a4a30",text:"La règle des 72 c'est fou comme c'est simple !",time:"il y a 4h"},
+  {name:"Emma R.",ini:"ER",bg:"#fef9e8",c:"#5a3a00",text:"Pouvez-vous faire une vidéo sur le PER ? Merci",time:"il y a 6h"},
+  {name:"Pierre D.",ini:"PD",bg:"#f0e8f9",c:"#3a1060",text:"J'ai commencé à investir grâce à cette app, merci !",time:"il y a 1j"},
+];
+
+// ============ QCM DATA ============
+const DOMAINS={
+  fiscalite:{
+    label:"Fiscalité",
+    color:"#0d1b4b",
+    levels:[
+      {title:"Imposition des revenus",type:"qcm",questions:[
+        {q:"Quel est le taux du PFU (flat tax) en France ?",opts:["20%","25%","30%","35%"],ans:2,exp:"Le PFU est de 30% : 12,8% d'IR + 17,2% de prélèvements sociaux. Il s'applique aux dividendes, intérêts et plus-values mobilières."},
+        {q:"Jusqu'à quel montant peut-on verser sur un PEA ?",opts:["100 000 €","150 000 €","200 000 €","250 000 €"],ans:1,exp:"Le plafond du PEA est de 150 000 €. Le PEA-PME permet d'y ajouter 225 000 € supplémentaires."},
+        {q:"Quelle est la tranche marginale d'imposition la plus haute en France ?",opts:["41%","45%","50%","55%"],ans:1,exp:"La tranche à 45% s'applique aux revenus dépassant 177 106 € par part fiscale."},
+        {q:"Après combien d'années les gains d'un PEA sont-ils exonérés d'IR ?",opts:["3 ans","5 ans","8 ans","10 ans"],ans:1,exp:"Après 5 ans, les plus-values sont exonérées d'IR. Les prélèvements sociaux de 17,2% restent dus."},
+        {q:"Quel est le plafond du Livret A ?",opts:["15 300 €","22 950 €","30 600 €","45 900 €"],ans:1,exp:"Le plafond est de 22 950 €. Ses intérêts sont totalement exonérés d'IR et de prélèvements sociaux."},
+        {q:"Que signifie TMI ?",opts:["Taux Moyen d'Imposition","Taux Marginal d'Imposition","Taxe sur les Marchés Immobiliers","Taux Minimum d'Imposition"],ans:1,exp:"La TMI est le taux appliqué à la dernière tranche de revenus imposables. C'est différent du taux moyen réel."},
+        {q:"Quel avantage fiscal offre l'assurance-vie après 8 ans ?",opts:["Exonération totale","Abattement 4 600 €/9 200 € + taux 7,5%","Pas d'IR sur plus-values","Taux fixe de 10%"],ans:1,exp:"Après 8 ans : abattement annuel de 4 600 € (célibataire) ou 9 200 € (couple). Au-delà, les gains sont taxés à 7,5% + PS."},
+        {q:"La décote fiscale s'applique à :",opts:["Les hauts revenus","Les faibles revenus","Tous les contribuables","Les entreprises"],ans:1,exp:"La décote réduit progressivement l'IR des foyers dont le montant calculé est faible, évitant un passage brutal à l'imposition."},
+        {q:"Le régime micro-fiscal applique quel abattement pour les services BIC ?",opts:["30%","50%","71%","34%"],ans:1,exp:"L'abattement forfaitaire est de 50% pour les services BIC, 71% pour les ventes de marchandises, 34% pour les BNC."},
+        {q:"Qu'est-ce que la CSG ?",opts:["Cotisation Sociale Généralisée","Contribution de Solidarité Générale","Cotisation Salariale Globale","Contribution Sociale Garantie"],ans:0,exp:"La CSG (Contribution Sociale Généralisée) est prélevée sur l'ensemble des revenus à hauteur de 9,2%. Elle finance la Sécurité Sociale."},
+      ]},
+      {title:"Fiscalité immobilière",type:"fitb",questions:[
+        {sentence:"Le régime ___ permet d'amortir un bien immobilier pour réduire la base imposable.",blanks:["LMNP"],choices:["LMNP","SCI","PTZ","PEL","LMP"],exp:"Le LMNP (Location Meublée Non Professionnelle) au régime réel permet d'amortir le bien sur 25-30 ans, effaçant souvent tout bénéfice imposable."},
+        {sentence:"La plus-value immobilière sur résidence ___ est exonérée d'impôt.",blanks:["principale"],choices:["principale","secondaire","locative","commerciale","saisonnière"],exp:"La plus-value sur la cession de la résidence principale est totalement exonérée d'IR et de prélèvements sociaux."},
+        {sentence:"En micro-foncier, l'abattement forfaitaire est de ___.",blanks:["30%"],choices:["30%","50%","71%","34%","20%"],exp:"Le régime micro-foncier s'applique si les revenus fonciers ne dépassent pas 15 000 €/an. Il offre un abattement forfaitaire de 30%."},
+        {sentence:"La ___ permet de transmettre jusqu'à 152 500 € par bénéficiaire hors droits de succession.",blanks:["assurance-vie"],choices:["assurance-vie","SCI","SCPI","donation","succession"],exp:"L'assurance-vie permet une transmission hors succession jusqu'à 152 500 € par bénéficiaire pour les primes versées avant 70 ans."},
+        {sentence:"Le taux de la taxe foncière est fixé par la ___ chaque année.",blanks:["commune"],choices:["commune","État","département","région","préfecture"],exp:"Le taux de la taxe foncière est voté chaque année par la commune (et le département pour la part départementale)."},
+        {sentence:"La ___ fiscale divise le revenu imposable par le nombre de parts du foyer.",blanks:["quotient familial"],choices:["quotient familial","décote","abattement","réduction","déduction"],exp:"Le quotient familial divise le revenu imposable par le nombre de parts (2 pour un couple, +0,5 par enfant) pour atténuer la progressivité."},
+        {sentence:"Le PER permet une déduction dans la limite de ___ des revenus nets professionnels.",blanks:["10%"],choices:["10%","5%","15%","20%","25%"],exp:"Les versements sur un PER sont déductibles du revenu imposable dans la limite de 10% des revenus nets professionnels de l'année précédente."},
+        {sentence:"La TVA au taux normal en France est de ___.",blanks:["20%"],choices:["20%","10%","5,5%","19,6%","23%"],exp:"Le taux normal de TVA est de 20%. Le taux intermédiaire est 10%, le réduit 5,5% (alimentation de base, livres) et le super-réduit 2,1%."},
+        {sentence:"Les droits de succession entre époux sont depuis 2007 totalement ___.",blanks:["exonérés"],choices:["exonérés","réduits","plafonnés","reportés","taxés"],exp:"Depuis la loi TEPA de 2007, les transmissions entre époux et partenaires de PACS sont totalement exonérées de droits de succession."},
+        {sentence:"L'IFI remplace l'ISF depuis ___ et ne concerne que l'immobilier.",blanks:["2018"],choices:["2018","2017","2019","2020","2016"],exp:"L'Impôt sur la Fortune Immobilière (IFI) a remplacé l'ISF en 2018. Il ne taxe que le patrimoine immobilier net supérieur à 1,3 million d'euros."},
+      ]},
+      {title:"Optimisation fiscale",type:"qcm",questions:[
+        {q:"Quel est le principal avantage fiscal du PEA après 5 ans ?",opts:["Pas de prélèvements sociaux","Exonération d'impôt sur le revenu","Capital garanti","Pas de frais de gestion"],ans:1,exp:"Après 5 ans, les plus-values sont exonérées d'IR. Les prélèvements sociaux (17,2%) restent dus. Le PEA est l'enveloppe idéale pour les ETF à long terme."},
+        {q:"Le PER est particulièrement avantageux si votre TMI est :",opts:["11%","0%","30% ou plus","15%"],ans:2,exp:"Le PER est d'autant plus intéressant que votre TMI est élevée : une déduction à 30% de TMI = 30% de réduction d'impôt. Moins intéressant à TMI faible."},
+        {q:"Qu'est-ce que la niche fiscale Pinel ?",opts:["Exonération totale de revenus fonciers","Réduction d'IR pour investissement locatif neuf","Déduction des intérêts d'emprunt","Abattement de 50% sur loyers"],ans:1,exp:"Le Pinel offrait une réduction d'IR jusqu'à 21% du prix d'achat en échange d'un engagement locatif. Le dispositif s'est terminé fin 2024."},
+        {q:"Comment réduire légalement son imposition sur les revenus fonciers ?",opts:["Ne pas déclarer les loyers","Passer au régime réel pour déduire les charges","Louer en dessous du prix du marché","Utiliser le micro-foncier systématiquement"],ans:1,exp:"En régime réel, toutes les charges sont déductibles : intérêts d'emprunt, travaux, taxe foncière, assurances, frais de gestion. Très avantageux si charges > 30%."},
+        {q:"Qu'est-ce que le déficit foncier ?",opts:["Des charges inférieures aux loyers","Des charges supérieures aux loyers, déductibles du revenu global","Une perte en capital sur une vente","Un trop-perçu de TVA"],ans:1,exp:"Le déficit foncier se crée quand les charges (hors intérêts) dépassent les loyers. Il est déductible du revenu global dans la limite de 10 700 €/an."},
+        {q:"Pour transmettre un capital à ses enfants avec un minimum de droits, il faut :",opts:["Attendre le décès","Faire des donations tous les 15 ans dans la limite des abattements","Utiliser un testament","Ouvrir une assurance-vie commune"],ans:1,exp:"Chaque parent peut donner 100 000 € par enfant tous les 15 ans sans droits de succession. Le démembrement et l'assurance-vie sont aussi très efficaces."},
+        {q:"L'option pour le barème progressif à la place du PFU est avantageuse si :",opts:["Votre TMI est supérieure à 30%","Votre TMI est inférieure à 30%","Votre TMI est de 30% exactement","Elle n'est jamais avantageuse"],ans:1,exp:"Si votre TMI est de 11% ou 0%, opter pour le barème progressif au lieu du PFU (30%) peut être très avantageux. Cette option s'applique à tous les revenus du capital."},
+        {q:"Que permet la 'flat tax' de 30% ?",opts:["Payer moins que le barème dans tous les cas","Simplifier l'imposition avec un taux unique sur les revenus du capital","Exonérer les dividendes de PS","Réduire l'IS des entreprises"],ans:1,exp:"Le PFU simplifie l'imposition des revenus du capital (dividendes, intérêts, plus-values) avec un taux global de 30%, évitant le calcul complexe du barème progressif."},
+        {q:"Les frais réels sont déductibles à la place de l'abattement de :",opts:["10%","20%","30%","50%"],ans:0,exp:"Par défaut, les salariés bénéficient d'un abattement forfaitaire de 10% pour frais professionnels. Ils peuvent opter pour les frais réels si ceux-ci dépassent cet abattement."},
+        {q:"Quel est le plafond de déductibilité des dons à des associations ?",opts:["50% des dons dans la limite de 20% du revenu imposable","66% des dons dans la limite de 20% du revenu imposable","75% des dons dans la limite de 1 000 €","100% des dons"],ans:1,exp:"Les dons aux associations d'intérêt général ouvrent droit à une réduction d'IR de 66% dans la limite de 20% du revenu imposable. Pour les associations aidant des personnes en difficulté, le taux est de 75%."},
+      ]},
+      {title:"Checkpoint : Maître Fiscal",type:"checkpoint",questions:[]},
+      {title:"TVA et taxes",type:"qcm",questions:[
+        {q:"Quel est le seuil de franchise en base de TVA pour les services ?",opts:["36 800 €","77 700 €","188 700 €","50 000 €"],ans:0,exp:"Le seuil de franchise en base de TVA est de 36 800 € pour les prestations de services et 91 900 € pour les livraisons de biens (2024)."},
+        {q:"Comment s'appelle la TVA récupérable sur les achats professionnels ?",opts:["TVA déductible","TVA collectée","TVA intracommunautaire","TVA sur encaissement"],ans:0,exp:"La TVA déductible est celle payée sur les achats professionnels, que vous récupérez en la déduisant de la TVA collectée sur vos ventes."},
+        {q:"Quel est le taux de TVA sur les produits alimentaires de base ?",opts:["20%","10%","5,5%","2,1%"],ans:2,exp:"Les produits alimentaires de base (pain, viande, légumes, fruits...) sont soumis au taux réduit de 5,5%. La restauration est à 10%."},
+        {q:"La CRDS est :",opts:["Contribution au Remboursement de la Dette Sociale","Cotisation de Retraite et Dépendance Salariale","Contribution au Régime Déficit Spécial","Caisse de Retraite et Dépendance Sociale"],ans:0,exp:"La CRDS (0,5%) et la CSG (9,2%) constituent les principales contributions sociales. Elles s'appliquent sur pratiquement tous les revenus."},
+        {q:"Quelle taxe s'applique sur les plus-values immobilières supérieures à 50 000 € ?",opts:["Taxe foncière","Surtaxe sur les plus-values élevées","Impôt sur la fortune","Contribution exceptionnelle"],ans:1,exp:"Une surtaxe s'applique sur les plus-values immobilières élevées : 2% entre 50 000 et 100 000 €, 3% jusqu'à 150 000 €, et ainsi de suite jusqu'à 6% au-delà de 260 000 €."},
+        {q:"La taxe d'habitation a été supprimée pour :",opts:["Les propriétaires uniquement","Toutes les résidences principales","Les résidences secondaires","Les logements étudiants"],ans:1,exp:"La taxe d'habitation sur les résidences principales a été progressivement supprimée pour tous les contribuables. Elle subsiste sur les résidences secondaires."},
+        {q:"Qu'est-ce que la contribution à l'audiovisuel public (redevance TV) ?",opts:["Une taxe sur les téléviseurs","Elle a été supprimée en 2022","Un abonnement obligatoire aux chaînes publiques","Une cotisation des diffuseurs"],ans:1,exp:"La contribution à l'audiovisuel public (ancienne 'redevance TV') a été définitivement supprimée en août 2022 par la loi de finances rectificative."},
+        {q:"La taxe sur les salaires concerne :",opts:["Toutes les entreprises","Les entreprises non assujetties à la TVA","Les auto-entrepreneurs","Les entreprises du secteur public"],ans:1,exp:"La taxe sur les salaires frappe les employeurs qui ne sont pas soumis à la TVA (ou seulement partiellement) : banques, assurances, associations, certaines professions libérales."},
+        {q:"Les droits de mutation à titre onéreux (DMTO) correspondent à :",opts:["Les droits de succession","Les frais de notaire lors d'une vente immobilière","La TVA sur l'immobilier neuf","Les droits d'enregistrement des entreprises"],ans:1,exp:"Les DMTO sont les 'frais de notaire' lors d'une vente immobilière dans l'ancien : environ 5,8% du prix de vente (dont 5,09% de droits de mutation et frais de notaire proprement dits)."},
+        {q:"Quelle est la taxe annuelle due par les propriétaires de résidences secondaires non occupées dans certaines zones ?",opts:["Taxe sur les logements vacants (TLV)","Taxe foncière majorée","Contribution spéciale logement","Surtaxe d'habitation résidentielle"],ans:0,exp:"La Taxe sur les Logements Vacants (TLV) peut atteindre 17% la 1ère année, 34% la 2e et les suivantes, dans les zones de tension locative. Certaines communes appliquent aussi une majoration de taxe d'habitation sur les résidences secondaires."},
+      ]},
+      {title:"Épargne retraite et succession",type:"fitb",questions:[
+        {sentence:"Le PER permet une sortie en ___ ou en ___ à la retraite.",blanks:["capital","rente"],choices:["capital","rente","actions","obligations","dividendes","points"],exp:"Le PER (Plan Épargne Retraite) offre une flexibilité à la sortie : rente viagère, capital en une fois, ou capital fractionné."},
+        {sentence:"L'assurance-vie transmise hors succession bénéficie d'un abattement de ___ euros par bénéficiaire.",blanks:["152 500"],choices:["152 500","100 000","70 000","200 000","300 000"],exp:"Pour les primes versées avant 70 ans, chaque bénéficiaire d'une assurance-vie bénéficie d'un abattement de 152 500 € sur les droits de succession."},
+        {sentence:"Chaque parent peut donner ___ euros à chaque enfant tous les 15 ans sans droits.",blanks:["100 000"],choices:["100 000","50 000","150 000","80 000","200 000"],exp:"L'abattement en ligne directe pour les donations est de 100 000 € par parent et par enfant, renouvelable tous les 15 ans."},
+        {sentence:"Les versements sur un PER sont déductibles à condition que votre TMI soit au moins de ___.",blanks:["11%"],choices:["11%","0%","30%","41%","20%"],exp:"Le PER n'est fiscalement intéressant que si vous êtes imposable. À TMI 0%, pas d'avantage. À TMI 30% ou plus, l'économie est très significative."},
+        {sentence:"La retraite complémentaire des salariés du privé est gérée par ___.",blanks:["AGIRC-ARRCO"],choices:["AGIRC-ARRCO","CNAV","CIPAV","CARCEPT","IRCANTEC"],exp:"L'AGIRC-ARRCO est la caisse de retraite complémentaire obligatoire de tous les salariés du privé (cadres et non-cadres depuis 2019)."},
+        {sentence:"Le délai pour bénéficier d'une exonération d'IR sur les plus-values immobilières est de ___ ans.",blanks:["22"],choices:["22","15","30","10","20"],exp:"Les plus-values immobilières sont totalement exonérées d'IR après 22 ans de détention (mais les prélèvements sociaux nécessitent 30 ans)."},
+        {sentence:"Un pacte ___ permet de réduire les droits de succession sur une entreprise familiale de 75%.",blanks:["Dutreil"],choices:["Dutreil","Pinel","Girardin","Malraux","Borloo"],exp:"Le pacte Dutreil permet de transmettre une entreprise avec un abattement de 75% sur la valeur taxable, à condition de conserver les titres pendant 4 ans."},
+        {sentence:"La retraite progressive permet de combiner emploi à ___ partiel et fraction de pension.",blanks:["temps"],choices:["temps","plein","complet","total","mi"],exp:"La retraite progressive permet au salarié de réduire son temps de travail tout en percevant une fraction de ses pensions de base et complémentaire."},
+        {sentence:"Le PERCO est un plan d'épargne retraite collectif proposé par ___.",blanks:["l'employeur"],choices:["l'employeur","la banque","l'État","la mairie","la CAF"],exp:"Le PERCO (Plan d'Épargne pour la Retraite Collectif) est un dispositif d'épargne salariale pour la retraite, mis en place par l'entreprise au bénéfice de ses salariés."},
+        {sentence:"Les ___ sont des parts de l'entreprise accordées aux salariés à un prix avantageux.",blanks:["stock-options"],choices:["stock-options","dividendes","obligations","BSPCE","warrants"],exp:"Les stock-options donnent le droit d'acheter des actions à un prix fixé à l'avance (prix d'exercice), souvent inférieur à la valeur de marché au moment de l'exercice."},
+      ]},
+      {title:"Checkpoint : Expert Fiscal",type:"checkpoint",questions:[]},
+    ]
+  },
+  finance:{
+    label:"Finance",
+    color:"#0d1b4b",
+    levels:[
+      {title:"Bases de la finance",type:"qcm",questions:[
+        {q:"Que signifie le sigle PER en analyse boursière ?",opts:["Potentiel d'Évolution du Résultat","Price Earnings Ratio","Plan d'Épargne Retraite","Prix Estimé de Rendement"],ans:1,exp:"Le PER (Price Earnings Ratio) = cours / bénéfice par action. Un PER de 20 signifie que l'action vaut 20 fois ses bénéfices annuels. Il permet de comparer des entreprises entre elles."},
+        {q:"Qu'est-ce qu'un ETF ?",opts:["Une obligation d'État","Un fonds indiciel coté en bourse","Un produit structuré","Un compte d'épargne"],ans:1,exp:"Un ETF réplique un indice boursier (CAC 40, S&P 500...) et se négocie comme une action. Ils ont des frais très bas (0,1 à 0,5%/an) et sont fortement diversifiés."},
+        {q:"Quel indice boursier regroupe les 500 plus grandes entreprises américaines ?",opts:["Dow Jones","NASDAQ","S&P 500","Russell 2000"],ans:2,exp:"Le S&P 500 est le benchmark mondial par excellence. Il représente ~80% de la capitalisation boursière américaine et a délivré ~10%/an sur 30 ans."},
+        {q:"Qu'est-ce que la volatilité ?",opts:["Le volume d'échange quotidien","L'amplitude des variations de prix","Le rendement annuel moyen","Le risque de faillite"],ans:1,exp:"La volatilité mesure l'amplitude des variations de prix. Une volatilité élevée = risque élevé mais potentiellement plus de rendement. Elle se mesure par l'écart-type des rendements."},
+        {q:"Qu'est-ce qu'un dividende ?",opts:["Une plus-value à la vente","Une part des bénéfices distribuée aux actionnaires","Un intérêt sur obligation","Une commission de courtage"],ans:1,exp:"Le dividende est la part des bénéfices distribués aux actionnaires. En France, il est soumis au PFU de 30% (ou barème progressif sur option)."},
+        {q:"Qu'est-ce que la capitalisation boursière ?",opts:["Le chiffre d'affaires annuel","Nombre d'actions × cours de bourse","Le bénéfice net de l'année","Les fonds propres au bilan"],ans:1,exp:"La market cap = nombre d'actions en circulation × cours de bourse. Elle représente la valeur totale d'une entreprise selon le marché. Apple dépasse 3 000 milliards de dollars."},
+        {q:"Que signifie 'vendre à découvert' (short selling) ?",opts:["Vendre rapidement son portefeuille","Parier à la baisse d'un titre en empruntant des actions","Vendre avec une décote","Liquider une position perdante"],ans:1,exp:"Le short selling : on emprunte des actions, on les vend, puis on espère les racheter moins cher. La perte potentielle est illimitée si le cours monte."},
+        {q:"Qu'est-ce que le risque de contrepartie ?",opts:["Le risque que le marché baisse","Le risque que l'autre partie ne respecte pas ses engagements","Le risque de change","Le risque d'inflation"],ans:1,exp:"Le risque de contrepartie est le risque que l'émetteur d'un produit financier (banque, assureur) ne puisse pas honorer ses engagements. C'est pourquoi la diversification est essentielle."},
+        {q:"Qu'est-ce que le beta d'une action ?",opts:["Le rendement espéré","La sensibilité d'une action aux mouvements du marché","Le dividende annuel","Le PER normalisé"],ans:1,exp:"Le beta mesure la sensibilité d'une action aux mouvements du marché. Beta=1 : même mouvement que le marché. Beta>1 : amplifie les mouvements. Beta<1 : amortit les variations."},
+        {q:"Qu'est-ce qu'une obligation ?",opts:["Une action sans droit de vote","Un titre de dette émis par une entreprise ou un État","Un dérivé sur actions","Un contrat à terme"],ans:1,exp:"Une obligation est un titre de créance. L'investisseur prête à l'émetteur qui s'engage à rembourser le capital + intérêts (coupon) à des dates fixes."},
+      ]},
+      {title:"Stratégies d'investissement",type:"fitb",questions:[
+        {sentence:"La stratégie ___ consiste à investir un montant fixe à intervalles réguliers.",blanks:["DCA"],choices:["DCA","FIRE","FOMO","B&H","ETF","SRI"],exp:"Le Dollar Cost Averaging (DCA) lisse le coût moyen d'achat en investissant régulièrement. Vous achetez plus de parts quand les prix sont bas."},
+        {sentence:"Un portefeuille bien diversifié réduit le risque ___ sans sacrifier le rendement.",blanks:["spécifique"],choices:["spécifique","systémique","global","général","total"],exp:"La diversification élimine le risque spécifique (propre à chaque entreprise) mais ne supprime pas le risque systémique (lié aux marchés dans leur ensemble)."},
+        {sentence:"La règle des ___ préconise un retrait de 4% du capital par an pour une retraite durable.",blanks:["4%"],choices:["4%","3%","5%","6%","7%","2%"],exp:"La règle des 4% (étude de Trinity, 1998) indique qu'un portefeuille investi en actions/obligations survit 30 ans avec un retrait de 4%/an, dans la grande majorité des scénarios historiques."},
+        {sentence:"Le ___ World est l'ETF de référence pour investir dans 1600 entreprises mondiales.",blanks:["MSCI"],choices:["MSCI","CAC","STOXX","FTSE","NASDAQ"],exp:"Le MSCI World est l'indice de référence mondial couvrant ~1 600 entreprises dans 23 pays développés. Il est répliqué par des ETF comme le CW8 d'Amundi."},
+        {sentence:"La ___ est la stratégie qui consiste à conserver ses actifs à long terme sans vendre.",blanks:["stratégie Buy and Hold"],choices:["stratégie Buy and Hold","stratégie DCA","diversification","gestion active","couverture"],exp:"Le Buy and Hold consiste à acheter et conserver ses investissements sur le long terme, en ignorant la volatilité à court terme. C'est la stratégie recommandée par Warren Buffett pour les particuliers."},
+        {sentence:"Le rebalancement périodique consiste à remettre le portefeuille à son ___ cible.",blanks:["allocation"],choices:["allocation","prix","rendement","niveau","cours"],exp:"Le rebalancement ajuste les proportions du portefeuille (ex: 60% actions / 40% obligations) qui s'écartent de la cible suite aux variations de marché."},
+        {sentence:"Un ETF ___ réinvestit automatiquement les dividendes.",blanks:["capitalisant"],choices:["capitalisant","distribuant","obligataire","indiciel","synthétique"],exp:"Un ETF capitalisant (Acc) réinvestit automatiquement les dividendes, maximisant l'effet de capitalisation. Un ETF distribuant (Dist) verse les dividendes en cash."},
+        {sentence:"La ___ est la corrélation entre les actifs d'un portefeuille, idéalement faible.",blanks:["diversification"],choices:["diversification","volatilité","liquidité","duration","convexité"],exp:"Pour qu'un portefeuille soit bien diversifié, ses actifs doivent avoir une faible corrélation entre eux : quand l'un baisse, l'autre ne baisse pas nécessairement."},
+        {sentence:"Les ___ permettent d'investir en obligations d'État françaises directement.",blanks:["OAT"],choices:["OAT","SICAV","OPCVM","ETF","SICAFs"],exp:"Les OAT (Obligations Assimilables du Trésor) sont les titres de dette de l'État français. Les particuliers peuvent en acheter via des ETF obligataires ou directement via TrésorDirect."},
+        {sentence:"Un ___ est un fonds qui sélectionne activement les actions et vise à battre son indice de référence.",blanks:["fonds actif"],choices:["fonds actif","ETF","tracker","fonds indiciel","fonds passif"],exp:"Un fonds actif est géré par des professionnels qui sélectionnent les titres pour tenter de surperformer le marché. Ils ont des frais plus élevés (1,5 à 2,5%/an) et surperforment rarement sur le long terme."},
+      ]},
+      {title:"Marchés financiers avancés",type:"qcm",questions:[
+        {q:"Que signifie l'acronyme IPO ?",opts:["Index Price Offer","Initial Public Offering","Investment Portfolio Optimization","Integrated Price Operation"],ans:1,exp:"L'IPO (Initial Public Offering) est l'introduction en Bourse d'une entreprise : ses actions sont proposées pour la première fois au public sur un marché réglementé."},
+        {q:"Qu'est-ce qu'un product structuré ?",opts:["Un fonds indiciel simple","Un produit combinant obligation + dérivé pour offrir une protection partielle","Un compte à terme rémunéré","Un emprunt bancaire classique"],ans:1,exp:"Un produit structuré combine une obligation (protection du capital) et un dérivé (participation à la hausse d'un indice). Il protège partiellement contre les pertes mais limite aussi les gains."},
+        {q:"Que mesure le ratio de Sharpe ?",opts:["La liquidité d'un fonds","Le rendement excédentaire par unité de risque","La valeur d'un portefeuille à terme","L'efficacité des frais de gestion"],ans:1,exp:"Le ratio de Sharpe = (rendement du portefeuille - taux sans risque) / volatilité. Plus il est élevé, meilleur est le rendement ajusté au risque. Un ratio > 1 est considéré bon."},
+        {q:"Qu'est-ce que le marché des changes (Forex) ?",opts:["Le marché des actions mondiales","Le marché d'échange des devises","Le marché des matières premières","Le marché des obligations internationales"],ans:1,exp:"Le Forex est le marché mondial d'échange des devises. Avec ~6 800 milliards de dollars de transactions par jour, c'est le marché le plus liquide et le plus actif au monde."},
+        {q:"Qu'est-ce qu'un call ?",opts:["L'obligation d'acheter une action à un prix fixé","Le droit d'acheter un actif à un prix fixé avant une date limite","Une vente à découvert","Un dividende exceptionnel"],ans:1,exp:"Un call est une option d'achat : elle donne le droit (pas l'obligation) d'acheter un actif (action, indice...) à un prix déterminé (strike) avant une date d'expiration."},
+        {q:"Qu'est-ce que le private equity ?",opts:["L'investissement en actions cotées","L'investissement dans des entreprises non cotées","Un fonds de placement réglementé","Une stratégie de trading haute fréquence"],ans:1,exp:"Le private equity investit dans des entreprises non cotées en Bourse (LBO, capital-risque, capital-développement). Historiquement très rentable mais peu liquide et accessible à partir de montants importants."},
+        {q:"Qu'est-ce que la duration d'une obligation ?",opts:["Sa date d'échéance","La sensibilité de son prix aux variations de taux d'intérêt","Le délai avant le premier coupon","La durée de sa garantie"],ans:1,exp:"La duration mesure la sensibilité du prix d'une obligation aux variations de taux. Si la duration est de 7 ans et les taux montent de 1%, le prix baisse d'environ 7%."},
+        {q:"Qu'est-ce qu'un hedge fund ?",opts:["Un fonds indiciel passif","Un fonds spéculatif utilisant des stratégies alternatives complexes","Un fonds de protection contre l'inflation","Un fonds d'investissement garanti"],ans:1,exp:"Les hedge funds utilisent des stratégies complexes (effet de levier, vente à découvert, dérivés...) pour générer de l'alpha. Ils sont réservés aux investisseurs institutionnels et fortunés."},
+        {q:"Qu'est-ce que la liquidité d'un actif ?",opts:["Son rendement annuel","La facilité à le vendre rapidement sans impacter son prix","Sa garantie en capital","Sa fiscalité avantageuse"],ans:1,exp:"La liquidité mesure la facilité et la rapidité à vendre un actif au prix du marché. Les actions cotées sont très liquides (vente en secondes). L'immobilier est peu liquide (mois de délai)."},
+        {q:"Que signifie 'rebalancer' son portefeuille ?",opts:["Vendre tous ses actifs","Remettre les proportions d'actifs à leur allocation cible","Passer d'un fonds actif à passif","Consolider ses investissements chez un seul courtier"],ans:1,exp:"Le rebalancement consiste à vendre les actifs surperformants et acheter les sous-performants pour revenir à l'allocation cible. Cela force à 'acheter bas et vendre haut'."},
+      ]},
+      {title:"Checkpoint : Analyste Financier",type:"checkpoint",questions:[]},
+      {title:"Finance personnelle",type:"fitb",questions:[
+        {sentence:"Le taux d'épargne se calcule comme (épargne / revenus nets) × ___.",blanks:["100"],choices:["100","50","12","365","1000"],exp:"Taux d'épargne = (montant épargné mensuel / revenus nets mensuels) × 100. Un taux de 20% est recommandé. Les adeptes du FIRE visent 50-70%."},
+        {sentence:"La règle des 72 : pour doubler son capital à 6%, il faut ___ ans.",blanks:["12"],choices:["12","6","8","10","15"],exp:"72 / 6 = 12 ans. C'est la règle des 72 : diviser 72 par le taux d'intérêt donne le nombre d'années pour doubler le capital. Simple et très précis jusqu'à ~15%."},
+        {sentence:"Le ___ est le rapport entre les mensualités de crédit et les revenus nets.",blanks:["taux d'endettement"],choices:["taux d'endettement","taux d'épargne","taux d'effort","taux marginal","taux moyen"],exp:"Le taux d'endettement (ou taux d'effort) ne doit pas dépasser 35% des revenus nets selon les recommandations du HCSF depuis 2021."},
+        {sentence:"Un crédit revolving a généralement un TAEG supérieur à ___.",blanks:["15%"],choices:["15%","5%","10%","3%","20%"],exp:"Le TAEG (Taux Annuel Effectif Global) d'un crédit revolving dépasse souvent 15-20%, contre 3-5% pour un prêt personnel classique. Le crédit revolving est à éviter autant que possible."},
+        {sentence:"La méthode ___ consiste à rembourser en priorité la dette avec le taux le plus élevé.",blanks:["avalanche"],choices:["avalanche","boule de neige","50/30/20","base zéro","enveloppes"],exp:"La méthode avalanche maximise l'économie d'intérêts en attaquant d'abord la dette la plus chère. La méthode 'boule de neige' commence par la plus petite dette pour la motivation."},
+        {sentence:"Se ___ en premier signifie allouer une part de son salaire à l'épargne avant toute dépense.",blanks:["payer"],choices:["payer","endetter","diversifier","couvrir","protéger"],exp:"'Pay yourself first' : virer automatiquement vers l'épargne dès réception du salaire. On vit avec ce qui reste, évitant de dépenser involontairement l'épargne prévue."},
+        {sentence:"Le mouvement ___ vise la retraite anticipée grâce à un taux d'épargne très élevé.",blanks:["FIRE"],choices:["FIRE","DCA","B&H","YOLO","FOMO"],exp:"FIRE (Financial Independence, Retire Early) : accumuler 25× ses dépenses annuelles pour pouvoir vivre des revenus du capital (règle des 4%) et quitter le travail salarié tôt."},
+        {sentence:"Un ___ d'urgence devrait couvrir 3 à 6 mois de dépenses essentielles.",blanks:["fonds"],choices:["fonds","livret","compte","budget","plan"],exp:"Le fonds d'urgence est une réserve de liquidités immédiatement disponibles (Livret A idéalement) pour faire face aux imprévus sans recourir au crédit ou vendre ses investissements."},
+        {sentence:"Le ___ est le coût du crédit incluant intérêts, frais de dossier et assurances.",blanks:["TAEG"],choices:["TAEG","taux nominal","TEG","taux fixe","taux variable"],exp:"Le TAEG (Taux Annuel Effectif Global) est le coût réel d'un crédit exprimé en pourcentage annuel. Il inclut tous les frais obligatoires et permet de comparer les offres de crédit."},
+        {sentence:"L'___ mesure l'ensemble des biens possédés moins les dettes.",blanks:["actif net"],choices:["actif net","épargne totale","capital","revenu net","patrimoine brut"],exp:"L'actif net (ou patrimoine net) = actifs (biens immobiliers, épargne, investissements...) - passifs (crédits, dettes). C'est l'indicateur de richesse réelle d'un ménage."},
+      ]},
+      {title:"Analyse et évaluation",type:"qcm",questions:[
+        {q:"Qu'est-ce que l'analyse fondamentale ?",opts:["L'étude des graphiques boursiers","L'analyse de la santé financière d'une entreprise pour évaluer sa valeur","L'analyse des flux de trésorerie quotidiens","L'étude des volumes d'échange"],ans:1,exp:"L'analyse fondamentale étudie les données financières (bilan, compte de résultat, flux de trésorerie), le secteur et le contexte macro pour déterminer la valeur intrinsèque d'une entreprise."},
+        {q:"Qu'est-ce que l'EBITDA ?",opts:["Le bénéfice net après impôts","Le résultat avant intérêts, impôts, dépréciations et amortissements","Le chiffre d'affaires hors taxes","Le flux de trésorerie disponible"],ans:1,exp:"L'EBITDA (Earnings Before Interest, Taxes, Depreciation and Amortization) mesure la capacité bénéficiaire opérationnelle d'une entreprise, hors structure financière et fiscale."},
+        {q:"Qu'est-ce que le DCF (Discounted Cash Flow) ?",opts:["Un indicateur de dette","Une méthode de valorisation basée sur les flux futurs actualisés","Un indice de capitalisation","Un ratio de liquidité"],ans:1,exp:"Le DCF actualise les flux de trésorerie futurs au taux d'actualisation (WACC). C'est la méthode de valorisation la plus rigoureuse théoriquement mais très sensible aux hypothèses."},
+        {q:"Qu'est-ce que l'EV/EBITDA ?",opts:["Un ratio de dette","Un multiple de valorisation comparant entreprises de même secteur","Un indicateur de liquidité","Un taux de rendement"],ans:1,exp:"L'EV/EBITDA (Valeur d'Entreprise / EBITDA) est un multiple de valorisation qui permet de comparer des entreprises d'un même secteur indépendamment de leur structure financière."},
+        {q:"Qu'est-ce que le free cash flow ?",opts:["Le résultat net de l'entreprise","Le cash généré après les investissements, disponible pour les actionnaires","Le chiffre d'affaires moins les coûts variables","Les dividendes distribués"],ans:1,exp:"Le free cash flow (FCF) = flux de trésorerie opérationnel - dépenses d'investissement (CAPEX). C'est l'argent réellement disponible pour les actionnaires, dividendes ou rachats d'actions."},
+        {q:"Qu'est-ce que le ROE (Return on Equity) ?",opts:["Le rendement des actifs","Le rendement des capitaux propres","Le taux de distribution des dividendes","Le ratio endettement/fonds propres"],ans:1,exp:"Le ROE = Résultat net / Fonds propres × 100. Il mesure la rentabilité des capitaux investis par les actionnaires. Warren Buffett recherche des entreprises avec un ROE > 15% sur le long terme."},
+        {q:"Qu'est-ce qu'une prime de risque ?",opts:["Le coût de l'assurance-vie","Le rendement supplémentaire exigé par les investisseurs en échange du risque","Les frais de gestion d'un fonds","La différence entre deux taux obligataires"],ans:1,exp:"La prime de risque est le rendement supplémentaire attendu par un investisseur pour accepter le risque actions vs un actif sans risque (OAT, bon du Trésor). Historiquement ~4-6% en Europe."},
+        {q:"Qu'est-ce que le WACC ?",opts:["Un indice boursier","Le coût moyen pondéré du capital d'une entreprise","Un ratio de liquidité","Un type d'obligation"],ans:1,exp:"Le WACC (Weighted Average Cost of Capital) est le taux de rendement minimum exigé par les apporteurs de capitaux (actionnaires + créanciers). Il est utilisé comme taux d'actualisation dans le DCF."},
+        {q:"Qu'est-ce qu'un rachat d'actions (buyback) ?",opts:["L'acquisition d'une autre entreprise","Une entreprise qui rachète ses propres actions sur le marché","Un programme de dividendes spéciaux","Une fusion-absorption"],ans:1,exp:"Un buyback : l'entreprise rachète ses propres actions, réduisant leur nombre en circulation. Cela augmente mécaniquement le BPA (bénéfice par action) et la valeur de chaque action restante."},
+        {q:"Qu'est-ce que le taux sans risque ?",opts:["Le taux du Livret A","Le rendement d'un actif ne présentant aucun risque de défaut (OAT 10 ans)","Le taux interbancaire EURIBOR","Le taux de l'assurance-vie en euros"],ans:1,exp:"Le taux sans risque est le rendement d'un actif considéré sans risque de défaut. En zone euro, c'est généralement le rendement des OAT françaises ou allemandes à 10 ans."},
+      ]},
+      {title:"Checkpoint : Expert Finance",type:"checkpoint",questions:[]},
+    ]
+  },
+  economie:{
+    label:"Économie",
+    color:"#0d1b4b",
+    levels:[
+      {title:"Macroéconomie fondamentale",type:"qcm",questions:[
+        {q:"Qu'est-ce que l'inflation ?",opts:["Une baisse généralisée des prix","Une hausse générale et durable des prix","Une augmentation des taux d'intérêt","Une dépréciation de la monnaie"],ans:1,exp:"L'inflation est une hausse générale et durable des prix. Elle érode le pouvoir d'achat : avec 3% d'inflation, vos 100€ d'aujourd'hui n'achèteront que 97€ de biens l'année prochaine."},
+        {q:"Que font les banques centrales pour lutter contre l'inflation ?",opts:["Baisser les taux directeurs","Augmenter les taux directeurs","Imprimer plus de monnaie","Réduire les impôts"],ans:1,exp:"En augmentant les taux directeurs, les banques centrales renchérissent le crédit, réduisant la consommation et l'investissement, ce qui ralentit l'économie et l'inflation."},
+        {q:"Qu'est-ce que le PIB ?",opts:["La valeur des exportations nettes","La valeur totale des biens et services produits dans un pays en un an","Le revenu national disponible","La somme des salaires versés"],ans:1,exp:"Le PIB (Produit Intérieur Brut) est la valeur totale de la production de biens et services sur un territoire pendant une période donnée. C'est le principal indicateur de richesse d'un pays."},
+        {q:"Qu'est-ce qu'une récession ?",opts:["Un ralentissement de la croissance","Deux trimestres consécutifs de recul du PIB","Une crise monétaire","Un déficit budgétaire"],ans:1,exp:"Techniquement, une récession est définie par deux trimestres consécutifs de baisse du PIB. Elle s'accompagne généralement d'une hausse du chômage et d'une baisse de l'investissement."},
+        {q:"Qu'est-ce que la politique budgétaire ?",opts:["La gestion des réserves de change","L'utilisation des dépenses publiques et fiscalité pour influencer l'économie","La régulation des banques commerciales","La fixation des taux d'intérêt"],ans:1,exp:"La politique budgétaire est le levier dont dispose le gouvernement via les dépenses publiques et la fiscalité. En période de crise, l'État peut dépenser plus (relance keynésienne)."},
+        {q:"Qu'est-ce que la déflation ?",opts:["Une baisse du taux d'intérêt","Une baisse durable des prix, potentiellement dangereuse","Une dévaluation de la monnaie","Une baisse de la croissance"],ans:1,exp:"La déflation (baisse des prix) semble positive mais est dangereuse : les consommateurs reportent leurs achats (pourquoi acheter aujourd'hui si ça coûtera moins cher demain ?), créant une spirale récessive."},
+        {q:"Qu'est-ce que le taux de chômage structurel ?",opts:["Le chômage lié aux récessions","Le niveau minimal de chômage incompressible même en période de plein emploi","Le chômage des jeunes","Le chômage saisonnier"],ans:1,exp:"Le chômage structurel est le chômage résiduel même en période de forte croissance : inadéquation des compétences, mobilité géographique limitée... En France, il est estimé à ~7-8%."},
+        {q:"Qu'est-ce que la balance commerciale ?",opts:["L'équilibre du budget de l'État","La différence entre exportations et importations","Le bilan de la Banque de France","Les réserves de change"],ans:1,exp:"La balance commerciale = exportations - importations. Positive = excédentaire (l'Allemagne), négative = déficitaire (les USA, la France depuis les années 2000)."},
+        {q:"Qu'est-ce que la masse monétaire M2 ?",opts:["Uniquement les billets et pièces en circulation","Les billets + dépôts à vue + dépôts à terme court","Tous les actifs financiers d'un pays","La dette publique totale"],ans:1,exp:"M2 inclut M1 (billets + dépôts à vue) + les dépôts à terme de moins de 2 ans et les dépôts remboursables avec préavis ≤ 3 mois. C'est l'agrégat le plus suivi par la BCE."},
+        {q:"Qu'est-ce que le multiplicateur budgétaire ?",opts:["L'effet d'une réduction d'impôt","L'amplification de l'impact d'une dépense publique sur le PIB","Le ratio dette/PIB","Le coefficient d'endettement"],ans:1,exp:"Le multiplicateur budgétaire mesure l'amplification de l'impact des dépenses publiques sur le PIB. Si le multiplicateur est 1,5, 1€ de dépense publique génère 1,5€ de PIB supplémentaire."},
+      ]},
+      {title:"Politique monétaire et BCE",type:"fitb",questions:[
+        {sentence:"La BCE a pour mission principale de maintenir l'inflation proche de ___.",blanks:["2%"],choices:["2%","0%","3%","5%","1%"],exp:"L'objectif de la BCE est de maintenir l'inflation 'proche mais inférieure à 2%' à moyen terme dans la zone euro. Depuis 2021, l'objectif est symétrique : exactement 2%."},
+        {sentence:"L'EURIBOR est le taux auquel les banques de la zone ___ se prêtent de l'argent entre elles.",blanks:["euro"],choices:["euro","dollar","sterling","yen","franc"],exp:"L'EURIBOR (Euro Interbank Offered Rate) est le taux de référence des prêts interbancaires en euros. Il sert de base pour de nombreux crédits à taux variable."},
+        {sentence:"Le ___ est le programme d'achat d'actifs par la BCE pour injecter des liquidités dans l'économie.",blanks:["QE"],choices:["QE","TLTRO","MES","FMI","FESF"],exp:"Le QE (Quantitative Easing) est la politique d'achat massif d'obligations souveraines et privées par la BCE pour stimuler l'économie et lutter contre la déflation."},
+        {sentence:"La parité de pouvoir d'achat (PPA) compare le niveau de ___ entre pays.",blanks:["vie"],choices:["vie","prix","salaires","PIB","dette"],exp:"La PPA ajuste le PIB par habitant pour tenir compte des différences de prix entre pays. Elle donne une meilleure image du niveau de vie réel que le PIB nominal."},
+        {sentence:"Une politique monétaire ___ signifie des taux d'intérêt bas et de la liquidité.",blanks:["accommodante"],choices:["accommodante","restrictive","neutre","contractionniste","austère"],exp:"Une politique monétaire accommodante (taux bas, QE) stimule l'économie en facilitant le crédit. Une politique restrictive (hausse des taux) freine l'inflation."},
+        {sentence:"Le ___ est le rapport entre la dette publique et le PIB d'un pays.",blanks:["ratio d'endettement"],choices:["ratio d'endettement","taux directeur","spread","déficit public","solde primaire"],exp:"Le ratio dette/PIB est l'indicateur de soutenabilité des finances publiques. En France, il dépasse 110% du PIB. Le traité de Maastricht fixe un seuil indicatif à 60%."},
+        {sentence:"La ___ est la capacité d'un pays à rembourser sa dette souveraine.",blanks:["solvabilité"],choices:["solvabilité","liquidité","rentabilité","stabilité","crédibilité"],exp:"La solvabilité d'un État dépend de sa capacité à générer des recettes fiscales suffisantes pour honorer ses engagements. Les agences de notation évaluent ce risque."},
+        {sentence:"Le ___ est la différence de taux entre une obligation et le taux sans risque de référence.",blanks:["spread"],choices:["spread","yield","coupon","prime","delta"],exp:"Le spread (ou prime de risque) est la différence de rendement entre une obligation risquée (dette grecque, dette d'entreprise) et l'obligation de référence sans risque (Bund allemand)."},
+        {sentence:"La ___ économique désigne les variations cycliques de l'activité autour d'une tendance.",blanks:["conjoncture"],choices:["conjoncture","structure","tendance","croissance","inflation"],exp:"La conjoncture économique désigne la situation économique à court terme : phase d'expansion, ralentissement, récession, reprise. Elle s'oppose à la structure (tendances de long terme)."},
+        {sentence:"Le ___ est l'indice de prix à la consommation harmonisé utilisé dans la zone euro.",blanks:["IPCH"],choices:["IPCH","CPI","IPC","PPI","GDP"],exp:"L'IPCH (Indice des Prix à la Consommation Harmonisé) est la mesure d'inflation officielle de la BCE. Il permet de comparer l'inflation entre pays membres de la zone euro."},
+      ]},
+      {title:"Commerce international",type:"qcm",questions:[
+        {q:"Qu'est-ce que le libre-échange ?",opts:["La suppression des barrières au commerce international","Un accord bilatéral entre deux pays","La réglementation des importations","Le contrôle des changes"],ans:0,exp:"Le libre-échange prône la suppression des barrières au commerce (droits de douane, quotas...) pour permettre à chaque pays de se spécialiser dans ce qu'il produit le mieux (avantage comparatif)."},
+        {q:"Qu'est-ce que l'avantage comparatif (David Ricardo) ?",opts:["Produire mieux que tous les autres","Se spécialiser dans ce qu'on produit relativement plus efficacement","Exporter plus qu'on importe","Avoir les coûts de production les plus bas"],ans:1,exp:"Ricardo a montré qu'un pays a intérêt à se spécialiser dans les biens où son avantage (ou désavantage) est relatif, même s'il est moins efficace dans tous les domaines."},
+        {q:"Qu'est-ce qu'un droit de douane ?",opts:["Une taxe sur les produits exportés","Une taxe sur les produits importés","Une réglementation sanitaire","Un quota d'importation"],ans:1,exp:"Un droit de douane est une taxe prélevée sur les produits importés. Il renchérit les importations pour protéger les producteurs locaux mais augmente les prix pour les consommateurs."},
+        {q:"Qu'est-ce que la balance des paiements ?",opts:["Le budget de l'État","L'enregistrement de toutes les transactions entre résidents et non-résidents","Le bilan de la Banque centrale","La dette extérieure brute"],ans:1,exp:"La balance des paiements enregistre toutes les transactions économiques entre un pays et le reste du monde : échanges de biens (balance commerciale), services, revenus et flux financiers."},
+        {q:"Qu'est-ce que le protectionnisme ?",opts:["L'ouverture totale au commerce international","La politique visant à protéger l'industrie nationale de la concurrence étrangère","L'unification des normes commerciales","La promotion des investissements étrangers"],ans:1,exp:"Le protectionnisme utilise les droits de douane, quotas, subventions et réglementations pour favoriser les producteurs nationaux face à la concurrence internationale."},
+        {q:"Quel est le rôle de l'OMC ?",opts:["Financer les pays en développement","Réguler le commerce mondial et arbitrer les différends commerciaux","Fixer les taux de change","Gérer les réserves mondiales d'or"],ans:1,exp:"L'OMC (Organisation Mondiale du Commerce) établit les règles du commerce international, négocie la réduction des barrières commerciales et arbitre les litiges entre pays membres."},
+        {q:"Qu'est-ce que la dévaluation compétitive ?",opts:["Une augmentation de la valeur de la monnaie","Baisser sa monnaie pour rendre ses exportations plus compétitives","Un accord de libre-échange","Une politique de désinflation"],ans:1,exp:"La dévaluation compétitive consiste à déprécier sa monnaie pour rendre ses exportations moins chères pour les acheteurs étrangers. Elle peut déclencher des 'guerres des monnaies'."},
+        {q:"Qu'est-ce qu'un accord de libre-échange bilatéral ?",opts:["Un traité militaire","Un accord commercial entre deux pays ou blocs pour réduire les barrières","Une union monétaire","Un accord d'investissement multilatéral"],ans:1,exp:"Un accord de libre-échange (ALE) réduit ou supprime les droits de douane et autres obstacles entre deux parties contractantes. Ex : CETA (UE-Canada), JEFTA (UE-Japon)."},
+        {q:"Qu'est-ce que la désindustrialisation ?",opts:["Le développement de l'industrie","Le déclin de la part de l'industrie dans le PIB et l'emploi","La robotisation des usines","La délocalisation vers les zones rurales"],ans:1,exp:"La désindustrialisation désigne le déclin relatif (en % du PIB et de l'emploi) du secteur industriel au profit des services. Elle s'est accélérée dans les pays développés depuis les années 1980."},
+        {q:"Qu'est-ce que le dumping social ?",opts:["Des aides d'État à l'industrie","La pratique de vente à perte","Concurrencer en offrant des conditions sociales dégradées","La fraude aux exportations"],ans:2,exp:"Le dumping social consiste à avantager ses exportations en maintenant des normes sociales (salaires, protection sociale, conditions de travail) bien en dessous des standards des pays concurrents."},
+      ]},
+      {title:"Checkpoint : Analyste Macro",type:"checkpoint",questions:[]},
+      {title:"Marchés et régulation",type:"fitb",questions:[
+        {sentence:"Le ___ est la valeur totale des biens et services produits dans un pays divisée par sa population.",blanks:["PIB par habitant"],choices:["PIB par habitant","taux de croissance","IDH","PPA","RNB"],exp:"Le PIB par habitant est un indicateur de richesse moyenne d'un pays. En France, il est d'environ 42 000 €. L'IDH (Indice de Développement Humain) prend aussi en compte l'éducation et la santé."},
+        {sentence:"La ___ de la Banque centrale régule la quantité de monnaie en circulation.",blanks:["politique monétaire"],choices:["politique monétaire","politique budgétaire","politique fiscale","politique sociale","politique commerciale"],exp:"La politique monétaire est le principal outil des banques centrales (BCE, Fed) pour réguler l'économie via les taux d'intérêt et la masse monétaire."},
+        {sentence:"Le marché ___ est là où s'échangent des actifs à court terme (moins d'un an).",blanks:["monétaire"],choices:["monétaire","obligataire","actions","immobilier","forex"],exp:"Le marché monétaire est le marché des capitaux à court terme : bons du Trésor, certificats de dépôt, billets de trésorerie. La BCE y intervient pour conduire sa politique monétaire."},
+        {sentence:"L'___ de Bâle III impose aux banques un ratio minimum de fonds propres.",blanks:["accord"],choices:["accord","loi","directive","règlement","traité"],exp:"Bâle III est un ensemble de mesures édictées par le Comité de Bâle imposant aux banques des ratios de fonds propres minimaux pour absorber les pertes en cas de crise."},
+        {sentence:"Le ___ est la période de croissance économique qui suit une récession.",blanks:["rebond"],choices:["rebond","plateau","pic","creux","décélération"],exp:"Le cycle économique comprend 4 phases : expansion (croissance), pic (sommet), récession (contraction) et reprise (rebond). La connaissance de ces cycles aide à prendre de meilleures décisions d'investissement."},
+        {sentence:"L'___ est la politique de retour à l'équilibre budgétaire via des coupes dans les dépenses.",blanks:["austérité"],choices:["austérité","relance","assouplissement","déflation","désinflation"],exp:"L'austérité budgétaire réduit les déficits via coupes dans les dépenses et/ou hausse des impôts. Elle peut être nécessaire mais risque de ralentir l'activité et d'aggraver la récession."},
+        {sentence:"Le ___ est le prix auquel deux devises s'échangent l'une contre l'autre.",blanks:["taux de change"],choices:["taux de change","taux d'intérêt","taux d'inflation","taux directeur","taux de base"],exp:"Le taux de change détermine la valeur relative de deux devises. Il est fixé par les marchés des changes (Forex) selon l'offre et la demande de chaque devise."},
+        {sentence:"La ___ est la philosophie selon laquelle les marchés s'autorégulent naturellement.",blanks:["main invisible"],choices:["main invisible","régulation","planification","dirigisme","keynésianisme"],exp:"La 'main invisible' d'Adam Smith (1776) : les individus qui cherchent leur intérêt personnel contribuent sans le vouloir à l'intérêt général via le mécanisme des prix sur des marchés libres."},
+        {sentence:"Le ___ est la différence entre les recettes et les dépenses de l'État.",blanks:["solde budgétaire"],choices:["solde budgétaire","PIB","dette publique","déficit courant","balance commerciale"],exp:"Le solde budgétaire = recettes fiscales - dépenses publiques. Un déficit creuse la dette publique. En France, le déficit dépasse régulièrement 5% du PIB depuis la crise de 2008."},
+        {sentence:"La ___ est un indicateur composite de développement humain incluant PIB, éducation et santé.",blanks:["IDH"],choices:["IDH","PIB","PPA","IMF","ONU"],exp:"L'IDH (Indice de Développement Humain) du PNUD agrège le revenu par habitant, l'espérance de vie et le niveau d'éducation. La France est dans le top 30 mondial."},
+      ]},
+      {title:"Économie comportementale",type:"qcm",questions:[
+        {q:"Qu'est-ce que l'économie comportementale ?",opts:["L'étude des marchés financiers","L'étude des biais psychologiques influençant les décisions économiques","L'analyse des comportements d'achat","L'économie des pays en développement"],ans:1,exp:"L'économie comportementale (Kahneman, Thaler) intègre la psychologie dans l'analyse économique. Elle montre que les humains ne sont pas 'rationnels' et prennent des décisions biaisées."},
+        {q:"Qu'est-ce que l'aversion aux pertes ?",opts:["Refuser tout investissement risqué","La souffrance d'une perte est plus forte que le plaisir d'un gain équivalent","Préférer les placements garantis","Éviter les marchés financiers"],ans:1,exp:"L'aversion aux pertes (Kahneman & Tversky) : une perte de 100€ fait plus 'mal' qu'un gain de 100€ ne fait plaisir. Ce biais pousse à conserver trop longtemps les positions perdantes."},
+        {q:"Qu'est-ce que le biais de confirmation ?",opts:["Confirmer ses achats en bourse","Chercher les informations qui confortent ses croyances existantes","Suivre l'opinion des experts","Analyser systématiquement toutes les données"],ans:1,exp:"Le biais de confirmation pousse à ne retenir que les informations qui confirment ses opinions préexistantes, ignorant les éléments contraires. Très dangereux en investissement."},
+        {q:"Qu'est-ce que l'effet de disposition ?",opts:["La tendance à bien classer ses actifs","Vendre trop tôt les gagnants et conserver trop longtemps les perdants","La diversification excessive","Le suivi des trends boursiers"],ans:1,exp:"L'effet de disposition est un biais bien documenté : les investisseurs vendent leurs actions gagnantes pour 'sécuriser les profits' et conservent leurs perdantes en espérant un rebond."},
+        {q:"Qu'est-ce que le biais d'ancrage ?",opts:["S'ancrer géographiquement à son pays","S'appuyer trop fortement sur la première information reçue","Investir uniquement dans son secteur","La surconfiance dans ses décisions"],ans:1,exp:"L'ancrage : la première information reçue influence trop les décisions suivantes. Ex : une action à 100€ qui tombe à 50€ semble 'pas chère' par rapport à son cours historique, même si 50€ est encore trop cher."},
+        {q:"Qu'est-ce que la finance comportementale de Thaler ?",opts:["L'analyse technique des marchés","L'intégration des biais psychologiques dans les modèles financiers","La gestion des fonds d'investissement","L'étude des crises financières"],ans:1,exp:"Richard Thaler (Nobel 2017) a montré que les investisseurs sont systématiquement irrationnels : comptabilité mentale, nudge, aversion aux pertes... Ses travaux ont révolutionné la finance et les politiques publiques."},
+        {q:"Qu'est-ce que le FOMO (Fear Of Missing Out) en finance ?",opts:["Un indicateur de risque de marché","La peur de rater une opportunité qui pousse à prendre des décisions irrationnelles","Une stratégie d'investissement","Un type de produit structuré"],ans:1,exp:"Le FOMO pousse les investisseurs à acheter au sommet des bulles (peur de rater la hausse) et à vendre en panique lors des baisses. C'est l'un des principaux ennemis de l'investisseur rationnel."},
+        {q:"Qu'est-ce que l'excès de confiance (overconfidence) ?",opts:["Investir dans des secteurs qu'on connaît bien","Surestimer ses compétences et la précision de ses prévisions","Diversifier trop son portefeuille","Suivre les conseils d'experts"],ans:1,exp:"L'overconfidence est très répandu chez les investisseurs : on surestimate ses compétences d'analyse, la précision de ses prévisions et la qualité de ses informations. Les hommes sont plus touchés que les femmes."},
+        {q:"Qu'est-ce que la comptabilité mentale (mental accounting) ?",opts:["Tenir une comptabilité personnelle rigoureuse","Traiter différemment des sommes d'argent selon leur origine ou destination","Optimiser sa fiscalité","Budgéter par catégories"],ans:1,exp:"La comptabilité mentale (Thaler) : on traite différemment 100€ de salaire, 100€ trouvés dans la rue et 100€ de gains au jeu. Cette segmentation irrationnelle conduit à de mauvaises décisions financières."},
+        {q:"Qu'est-ce que l'effet de cadrage (framing effect) ?",opts:["La présentation visuelle d'un produit financier","La même décision est prise différemment selon la façon dont elle est présentée","L'encadrement réglementaire des marchés","La structure d'un portefeuille"],ans:1,exp:"L'effet de cadrage : '90% de réussite' et '10% d'échec' décrivent la même réalité mais induisent des décisions différentes. Les émetteurs de produits financiers utilisent abondamment ce biais."},
+      ]},
+      {title:"Checkpoint : Économiste Expert",type:"checkpoint",questions:[]},
+    ]
+  }
+};
+
+const FORMATIONS={
+  debut:[
+    {id:"budget-base",title:"Budget Maîtrisé",desc:"Gérer son argent au quotidien avec la règle des 50/30/20.",price:"9,95 €",free:false,formateur:"Marie Dubois",fIni:"MD",fBg:"#e8ecf9",fC:"#0d1b4b",mods:8,dur:"4h",rating:"4.9",emoji:"💸",bg:"linear-gradient(135deg,#0d1b4b,#1e2f7a)",level:"debut"},
+    {id:"epargne-base",title:"L'Épargne pour Débuter",desc:"Livret A, LDDS, PEL, assurance-vie : comprendre chaque support.",price:"9,95 €",free:false,formateur:"Thomas Laurent",fIni:"TL",fBg:"#e8f4f0",fC:"#0a4a30",mods:6,dur:"3h",rating:"4.8",emoji:"🐖",bg:"linear-gradient(135deg,#0a1f1a,#0d4a35)",level:"debut"},
+    {id:"fiche-paie",title:"Comprendre sa Fiche de Paie",desc:"Brut, net, cotisations, CSG : décryptez votre bulletin.",price:"9,95 €",free:false,formateur:"Camille Petit",fIni:"CP",fBg:"#fef9e8",fC:"#5a3a00",mods:5,dur:"2h30",rating:"4.7",emoji:"📄",bg:"linear-gradient(135deg,#1a1005,#3a2010)",level:"debut"},
+    {id:"retraite-bases",title:"La Retraite : Comprendre les Bases",desc:"Trimestres, taux plein, AGIRC-ARRCO avant 40 ans.",price:"9,95 €",free:false,formateur:"Sophie Martin",fIni:"SM",fBg:"#f0e8f9",fC:"#3a1060",mods:7,dur:"3h30",rating:"4.6",emoji:"🧓",bg:"linear-gradient(135deg,#0d1b4b,#2a0d4b)",level:"debut"},
+  ],
+  inter:[
+    {id:"bourse-etf",title:"Investir en Bourse : ETF & Actions",desc:"DCA, ETF monde, diversification et gestion du risque.",price:"16,95 €",free:false,formateur:"Alex Chen",fIni:"AC",fBg:"#e8f4f9",fC:"#0a3050",mods:12,dur:"8h",rating:"4.9",emoji:"📊",bg:"linear-gradient(135deg,#0d2040,#1a5080)",level:"inter"},
+    {id:"fiscalite-avancee",title:"Fiscalité du Particulier",desc:"PEA, assurance-vie, LMNP : maîtriser les enveloppes fiscales.",price:"16,95 €",free:false,formateur:"Marie Dubois",fIni:"MD",fBg:"#e8ecf9",fC:"#0d1b4b",mods:10,dur:"6h",rating:"4.8",emoji:"🏦",bg:"linear-gradient(135deg,#0d1b4b,#162266)",level:"inter"},
+    {id:"immo-locatif",title:"Immobilier Locatif en Pratique",desc:"Du premier bien au premier loyer : financement et gestion.",price:"16,95 €",free:false,formateur:"Thomas Laurent",fIni:"TL",fBg:"#e8f4f0",fC:"#0a4a30",mods:15,dur:"10h",rating:"4.7",emoji:"🏠",bg:"linear-gradient(135deg,#0a1f1a,#0d4a35)",level:"inter"},
+    {id:"creer-entreprise",title:"Créer son Entreprise",desc:"SASU, EURL, fiscalité, prévisionnel, aides à la création.",price:"16,95 €",free:false,formateur:"Camille Petit",fIni:"CP",fBg:"#fef9e8",fC:"#5a3a00",mods:11,dur:"7h",rating:"4.8",emoji:"🚀",bg:"linear-gradient(135deg,#1a1005,#3a2010)",level:"inter"},
+  ],
+  avance:[
+    {id:"patrimoine-global",title:"Gestion de Patrimoine Globale",desc:"Holding, démembrement, transmission et optimisation multi-enveloppes.",price:"24,95 €",free:false,formateur:"Sophie Martin",fIni:"SM",fBg:"#f0e8f9",fC:"#3a1060",mods:22,dur:"18h",rating:"5.0",emoji:"👑",bg:"linear-gradient(135deg,#0d1b4b,#1a0a3b)",level:"avance"},
+    {id:"trading-avance",title:"Trading Technique Avancé",desc:"Analyse technique, options, levier et money management.",price:"24,95 €",free:false,formateur:"Alex Chen",fIni:"AC",fBg:"#e8f4f9",fC:"#0a3050",mods:20,dur:"15h",rating:"4.9",emoji:"📈",bg:"linear-gradient(135deg,#0d1b4b,#2a1b5b)",level:"avance"},
+    {id:"defi-crypto",title:"DeFi & Crypto Expert",desc:"Yield farming, staking, protocoles DeFi, fiscalité crypto.",price:"24,95 €",free:false,formateur:"Jordan Walsh",fIni:"JW",fBg:"#e8ecf9",fC:"#0d1b4b",mods:18,dur:"12h",rating:"4.8",emoji:"⛓️",bg:"linear-gradient(135deg,#050d20,#0a2040)",level:"avance"},
+    {id:"lever-fonds",title:"Lever des Fonds : Guide Startup",desc:"Term sheet, valorisation, négociation VC et exit strategy.",price:"24,95 €",free:false,formateur:"Marie Dubois",fIni:"MD",fBg:"#e8ecf9",fC:"#0d1b4b",mods:16,dur:"12h",rating:"4.9",emoji:"💼",bg:"linear-gradient(135deg,#0a1505,#1a3010)",level:"avance"},
+  ],
+};
+
+// ==================== STATE ====================
+let curScreen='qr',curVid=0,isAnim=false,touchStartY=0;
+let xp=340,lives=5,streak=7,combo=0;
+let curDomain='fiscalite';
+// Per-domain independent progress
+let domProgress={fiscalite:0,finance:0,economie:0};
+let quizLevelData=null,quizQuestions=[],curQ=0,correctCount=0,answered=false,selectedAnswer=null,fitbSelections={};
+let activeQuizDomain=null,activeQuizLevelIdx=0;
+let curCourse=null,curModIdx=0,curCTab='mods',completedMods={};
+let ciChart=null;
+let likes={};
+
+// ==================== INIT ====================
+function init(){
+  renderLives();
+  renderQRLives();
+  renderSnake('fiscalite');
+  renderFeed();
+  renderFormations('debut');
+}
+
+// ==================== NAV ====================
+function switchScreen(name){
+  const order=['feed','qr','form'];
+  const map={feed:'feed-screen',qr:'qr-screen',form:'form-screen'};
+  const ci=order.indexOf(curScreen),ni=order.indexOf(name);
+  if(ni>ci){document.getElementById(map[curScreen]).className='screen sl';}
+  else if(ni<ci){document.getElementById(map[curScreen]).className='screen sr';}
+  document.getElementById(map[name]).className='screen sa';
+  curScreen=name;
+  document.querySelectorAll('.nvi').forEach(n=>n.classList.remove('active'));
+  document.getElementById('nav-'+name).classList.add('active');
+}
+
+// ==================== XP / LIVES ====================
+function renderLives(){
+  const d=document.getElementById('hearts-display');if(d){d.innerHTML='';for(let i=0;i<5;i++){const s=document.createElement('span');s.className='qr-life'+(i>=lives?' dead':'');s.textContent='❤️';d.appendChild(s);}}
+}
+function renderQRLives(){
+  const d=document.getElementById('qr-lives');if(!d)return;d.innerHTML='';
+  for(let i=0;i<5;i++){const s=document.createElement('span');s.className='qr-life'+(i>=lives?' dead':'');s.textContent='❤️';d.appendChild(s);}
+  const d2=document.getElementById('qovLives');if(!d2)return;d2.innerHTML='';
+  for(let i=0;i<5;i++){const s=document.createElement('span');s.className='quiz-ov-life'+(i>=lives?' dead':'');s.textContent='❤️';d2.appendChild(s);}
+}
+function loseLife(){if(lives>0)lives--;renderQRLives();}
+function updateXP(amt){xp+=amt;document.getElementById('xp-disp').textContent='⚡ '+xp+' XP';}
+function showXPPop(amt){
+  document.getElementById('xpAmt').textContent='+'+amt+' XP';
+  document.getElementById('xpCombo').textContent=combo>=3?'Combo x'+combo+'!':'';
+  const p=document.getElementById('xpPopup');p.classList.add('show');setTimeout(()=>p.classList.remove('show'),1300);
+}
+
+// ==================== DOMAIN TABS ====================
+function setDomain(d){
+  curDomain=d;
+  const tabMap={fiscalite:'fisc',finance:'fin',economie:'eco'};
+  Object.values(tabMap).forEach(k=>{const el=document.getElementById('dtab-'+k);if(el)el.classList.remove('active');});
+  const el=document.getElementById('dtab-'+tabMap[d]);if(el)el.classList.add('active');
+  renderSnake(d);
+}
+
+// ==================== SNAKE PATH ====================
+const NODE_ICONS={
+  fiscalite:['📋','💳','🏛️','📊','💡','🔖','📈','🎓','⚖️','🏆'],
+  finance:  ['📈','💰','🏦','📊','💡','🪙','📉','🎓','💹','🏆'],
+  economie: ['🌐','📉','🏭','💹','💡','📰','📊','🎓','⚡','🏆'],
+};
+const BG_DECOS={
+  fiscalite:['💶','📝','⚖️','🧾','🔖','💼','🏛️','📋'],
+  finance:  ['📈','💹','🏦','💲','📊','🪙','💰','📉'],
+  economie: ['🌍','📉','🏗️','📰','🔢','⚡','📊','🌐'],
+};
+
+function renderSnake(domainId){
+  const dom=DOMAINS[domainId];if(!dom)return;
+  const c=document.getElementById('snakeContainer');c.innerHTML='';
+  const wrap=document.createElement('div');wrap.className='snake-domain';
+  const progress=domProgress[domainId]||0;
+  const totalLevels=dom.levels.length;
+
+  // Background floating decorations
+  const bgd=BG_DECOS[domainId]||BG_DECOS.fiscalite;
+  bgd.forEach((emoji,i)=>{
+    const s=document.createElement('span');
+    s.className='snake-bg-deco';
+    s.textContent=emoji;
+    s.style.cssText=`top:${8+i*12}%;left:${i%2===0?3:72+Math.floor(i*2)}%;animation-delay:${i*0.4}s`;
+    wrap.appendChild(s);
+  });
+
+  // Badge with progress
+  const badge=document.createElement('div');badge.className='domain-badge';
+  badge.innerHTML=`${dom.label} <span class="domain-prog">${progress}/${totalLevels} niveaux</span>`;
+  wrap.appendChild(badge);
+
+  const snake=document.createElement('div');snake.className='snake';
+  const icons=NODE_ICONS[domainId]||NODE_ICONS.fiscalite;
+  const positions=['pos-r','pos-c','pos-l','pos-c'];
+
+  dom.levels.forEach((lv,i)=>{
+    const isCP=lv.type==='checkpoint';
+    const pos=isCP?'pos-c':positions[i%4];
+    const isDone=i<progress;
+    const isActive=i===progress;
+    const isLocked=i>progress;
+
+    // Node row
+    const row=document.createElement('div');
+    row.className='snake-row '+pos;
+
+    const node=document.createElement('div');
+    node.className='lesson-node '+(isCP?'checkpoint':isDone?'done':isActive?'active-node':'locked');
+
+    // Active bounce arrow
+    if(isActive){
+      const ab=document.createElement('div');ab.className='active-bounce';ab.textContent='▼';node.appendChild(ab);
+    }
+
+    // Node content
+    const icon=isCP?'🏆':isDone?'✅':isLocked?'🔒':icons[i%icons.length];
+    const numTxt=isCP?(isDone?'✓':'Bilan'):isDone?'':isLocked?'':(i+1);
+    node.innerHTML+=`<div class="node-emoji">${icon}</div>${numTxt?`<div class="node-num">${numTxt}</div>`:''}`;
+
+    // Tooltip for active node
+    if(isActive&&lv.title){
+      const tip=document.createElement('div');tip.className='node-tip';tip.textContent=lv.title;node.appendChild(tip);
+    }
+
+    // Click handlers
+    if(!isLocked&&!isCP){
+      node.onclick=()=>openQuiz(domainId,i);
+    } else if(isCP){
+      node.onclick=()=>toast(isDone?'🏆 Bilan validé !':'Termine le niveau précédent d\'abord !');
+    }
+
+    row.appendChild(node);
+    snake.appendChild(row);
+
+    // Connector between nodes
+    if(i<dom.levels.length-1){
+      const conn=document.createElement('div');conn.className='snake-conn';
+      const nextIsCP=dom.levels[i+1]&&dom.levels[i+1].type==='checkpoint';
+      const curPosStr=isCP?'pos-c':positions[i%4];
+      const nextPosStr=nextIsCP?'pos-c':positions[(i+1)%4];
+
+      // Calculate SVG path points
+      const W=390,H=40,mx=195;
+      const xMap={'pos-r':W-60,'pos-c':mx,'pos-l':60};
+      const x1=xMap[curPosStr]||mx,x2=xMap[nextPosStr]||mx;
+      const y1=0,y2=H;
+      const cx=((x1+x2)/2),cy=H/2;
+      const pathColor=isDone?'#16a34a':'#cdd1e8';
+      const sw=isDone?3:2;
+      const dash=isDone?'':'5,5';
+
+      conn.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <path d="M${x1} ${y1} Q${cx} ${cy} ${x2} ${y2}" fill="none" stroke="${pathColor}" stroke-width="${sw}" stroke-dasharray="${dash}" stroke-linecap="round"/>
+      </svg>`;
+
+      // Floating deco on every 2nd connector
+      if(i%2===0){
+        const deco=document.createElement('span');
+        deco.className='node-deco';
+        const decoEmoji=BG_DECOS[domainId][Math.floor(i/2)%BG_DECOS[domainId].length];
+        deco.textContent=decoEmoji;
+        deco.style.cssText=`top:2px;left:${45+Math.random()*10}%;animation-delay:${i*0.3}s`;
+        conn.appendChild(deco);
+      }
+      snake.appendChild(conn);
+    }
+  });
+
+  wrap.appendChild(snake);
+  c.appendChild(wrap);
+}
+
+// ==================== QUIZ ====================
+function openQuiz(domainId,levelIdx){
+  const dom=DOMAINS[domainId];
+  const lv=dom.levels[levelIdx];
+  if(!lv||lv.type==='checkpoint')return;
+  quizLevelData=lv;
+  activeQuizDomain=domainId;
+  activeQuizLevelIdx=levelIdx;
+  quizQuestions=[...lv.questions].sort(()=>Math.random()-.5);
+  curQ=0;correctCount=0;combo=0;answered=false;selectedAnswer=null;fitbSelections={};
+  document.getElementById('qovTitle').textContent=lv.title;
+  document.getElementById('qovSub').textContent=dom.label+' — Niveau '+(levelIdx+1);
+  renderQuizQuestion();
+  document.getElementById('quizOv').classList.add('show');
+}
+function closeQuiz(){document.getElementById('quizOv').classList.remove('show');}
+
+function renderQuizQuestion(){
+  if(curQ>=quizQuestions.length){showResult();return;}
+  const q=quizQuestions[curQ];
+  answered=false;selectedAnswer=null;fitbSelections={};
+  document.getElementById('qprogfill').style.width=((curQ+1)/quizQuestions.length*100)+'%';
+  const body=document.getElementById('quizBody');body.innerHTML='';
+  const btn=document.getElementById('btnCheck');btn.disabled=true;btn.className='btn-check';btn.textContent='Vérifier';
+
+  const typeBadge=document.createElement('div');
+  typeBadge.className='qtype-badge';
+  typeBadge.textContent=q.sentence?'Complète la phrase':'Choix multiple';
+  body.appendChild(typeBadge);
+
+  const qq=document.createElement('div');qq.className='qquestion';
+  qq.textContent=q.sentence?'Complète la phrase ci-dessous :':q.q;
+  body.appendChild(qq);
+
+  if(q.sentence){
+    renderFITB(body,q);
+  } else {
+    const opts=document.createElement('div');opts.className='qopts';
+    q.opts.forEach((o,i)=>{
+      const b=document.createElement('button');b.className='qopt';b.textContent=o;
+      b.onclick=()=>{
+        if(answered)return;
+        document.querySelectorAll('.qopt').forEach(x=>x.style.background='');
+        b.style.background='var(--blue-light)';b.style.borderColor='var(--navy)';
+        selectedAnswer=i;
+        document.getElementById('btnCheck').disabled=false;
+      };
+      opts.appendChild(b);
+    });
+    body.appendChild(opts);
+  }
+
+  const fb=document.createElement('div');fb.className='qfeedback';fb.id='qfbEl';body.appendChild(fb);
+}
+
+function renderFITB(body,q){
+  const parts=q.sentence.split('___');
+  const sentDiv=document.createElement('div');sentDiv.className='fitb-sentence';
+  parts.forEach((part,i)=>{
+    sentDiv.appendChild(document.createTextNode(part));
+    if(i<parts.length-1){
+      const blank=document.createElement('span');blank.className='fitb-blank';blank.id='blank-'+i;
+      blank.textContent=fitbSelections[i]||'   ';
+      blank.onclick=()=>{
+        if(answered||!fitbSelections[i])return;
+        const word=fitbSelections[i];
+        delete fitbSelections[i];
+        blank.textContent='   ';blank.className='fitb-blank';
+        const chip=document.querySelector('.word-chip[data-word="'+word+'"]');
+        if(chip)chip.classList.remove('used');
+        checkFITBComplete();
+      };
+      sentDiv.appendChild(blank);
+    }
+  });
+  body.appendChild(sentDiv);
+
+  const wb=document.createElement('div');wb.className='word-bank';
+  const shuffled=[...q.choices].sort(()=>Math.random()-.5);
+  shuffled.forEach(w=>{
+    const chip=document.createElement('div');chip.className='word-chip';chip.textContent=w;chip.dataset.word=w;
+    chip.onclick=()=>{
+      if(answered||chip.classList.contains('used'))return;
+      const numBlanks=q.blanks.length;
+      for(let i=0;i<numBlanks;i++){
+        if(!fitbSelections[i]){
+          fitbSelections[i]=w;chip.classList.add('used');
+          const bl=document.getElementById('blank-'+i);
+          if(bl){bl.textContent=w;bl.classList.add('filled');}
+          break;
+        }
+      }
+      checkFITBComplete();
+    };
+    wb.appendChild(chip);
+  });
+  body.appendChild(wb);
+}
+
+function checkFITBComplete(){
+  const q=quizQuestions[curQ];
+  if(!q.blanks)return;
+  const filled=Object.keys(fitbSelections).length>=q.blanks.length;
+  document.getElementById('btnCheck').disabled=!filled;
+}
+
+function checkAnswer(){
+  if(answered)return;
+  const q=quizQuestions[curQ];
+  answered=true;
+  document.querySelectorAll('.qopt').forEach(o=>o.classList.add('disabled'));
+  const fb=document.getElementById('qfbEl');
+  const btn=document.getElementById('btnCheck');
+  let correct=false;
+
+  if(q.sentence){
+    correct=q.blanks.every((b,i)=>fitbSelections[i]===b);
+    for(let i=0;i<q.blanks.length;i++){
+      const bl=document.getElementById('blank-'+i);
+      if(bl){
+        bl.classList.remove('filled');
+        if(fitbSelections[i]===q.blanks[i])bl.classList.add('correct-blank');
+        else{bl.classList.add('wrong-blank');bl.textContent=q.blanks[i];}
+      }
+    }
+    document.querySelectorAll('.word-chip').forEach(c=>{c.style.pointerEvents='none';});
+  } else {
+    if(selectedAnswer===q.ans){correct=true;}
+    document.querySelectorAll('.qopt').forEach((o,i)=>{
+      if(i===q.ans)o.classList.add('correct');
+      else if(i===selectedAnswer)o.classList.add('wrong');
+    });
+  }
+
+  if(correct){
+    combo++;correctCount++;
+    const xpG=combo>=3?75:combo>=2?60:50;
+    updateXP(xpG);showXPPop(xpG);
+    fb.className='qfeedback good show';fb.innerHTML='<strong>Correct !</strong> '+q.exp;
+    btn.className='btn-check correct-btn';
+  } else {
+    combo=0;loseLife();
+    fb.className='qfeedback bad show';fb.innerHTML='<strong>Incorrect.</strong> '+q.exp;
+    btn.className='btn-check wrong-btn';
+  }
+  btn.textContent='Continuer →';btn.disabled=false;
+  btn.onclick=()=>{btn.onclick=()=>checkAnswer();curQ++;renderQuizQuestion();};
+}
+
+function showResult(){
+  const pct=Math.round(correctCount/quizQuestions.length*100);
+  const passed=pct>=60;
+  const dom=DOMAINS[activeQuizDomain];
+  const curProg=domProgress[activeQuizDomain]||0;
+  const maxLevel=dom.levels.length-1;
+
+  document.getElementById('resEmoji').textContent=pct>=80?'🎉':pct>=50?'👍':'💪';
+  document.getElementById('resTitle').textContent=pct>=80?'Excellent !':pct>=50?'Bien joué !':'Continue !';
+  document.getElementById('resSub').textContent=correctCount+'/'+quizQuestions.length+' correctes — '+pct+'%';
+  document.getElementById('rs-score').textContent=pct+'%';
+  document.getElementById('rs-xp').textContent='+'+correctCount*50+' XP';
+  document.getElementById('rs-streak').textContent='🔥'+streak;
+
+  const msgEl=document.getElementById('res-unlock-msg');
+  const btnSuivant=document.getElementById('btnSuivant');
+
+  if(passed && activeQuizLevelIdx===curProg && curProg<maxLevel){
+    // Unlock next level
+    domProgress[activeQuizDomain]=curProg+1;
+    const nextLv=dom.levels[curProg+1];
+    const nextName=nextLv&&nextLv.type==='checkpoint'?'Bilan':nextLv?nextLv.title:'Suivant';
+    msgEl.textContent='🔓 Niveau débloqué : '+nextName;
+    msgEl.style.display='block';
+    btnSuivant.textContent='Suivant →';
+  } else if(!passed){
+    msgEl.textContent='Score minimum 60% requis pour progresser. Réessaie !';
+    msgEl.style.display='block';
+    msgEl.style.background='#fef2f2';
+    msgEl.style.borderColor='#fecaca';
+    msgEl.style.color='#991b1b';
+    btnSuivant.textContent='Retour au parcours';
+  } else {
+    msgEl.style.display='none';
+    btnSuivant.textContent='Retour au parcours';
+  }
+
+  closeQuiz();
+  document.getElementById('resultOv').classList.add('show');
+}
+
+function goNextLevel(){
+  document.getElementById('resultOv').classList.remove('show');
+  renderSnake(activeQuizDomain);
+  // Reset msg style
+  const msgEl=document.getElementById('res-unlock-msg');
+  if(msgEl){msgEl.style.background='';msgEl.style.borderColor='';msgEl.style.color='';}
+}
+function replayQuiz(){
+  document.getElementById('resultOv').classList.remove('show');
+  if(activeQuizDomain!=null)openQuiz(activeQuizDomain,activeQuizLevelIdx);
+}
+function closeResult(){
+  document.getElementById('resultOv').classList.remove('show');
+  renderSnake(activeQuizDomain||curDomain);
+}
+
+// ==================== FEED ====================
+function renderFeed(){
+  const stack=document.getElementById('vstack');stack.innerHTML='';
+  const dots=document.getElementById('vdots');dots.innerHTML='';
+  VIDEOS.forEach((_,i)=>{
+    const d=document.createElement('div');d.className='vdot'+(i===0?' va':'');d.id='vd-'+i;dots.appendChild(d);
+  });
+  VIDEOS.forEach((v,i)=>{
+    const c=buildVCard(v,i);
+    if(i>0)c.style.transform='translateY(100%)';
+    stack.appendChild(c);
+  });
+  setupSwipe();
+}
+
+// Instagram-style SVG icons
+const HEART_SVG=`<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+const CMT_SVG=`<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+const SHARE_SVG=`<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+const SAVE_SVG=`<svg viewBox="0 0 24 24"><polygon points="19 21 12 16 5 21 5 3 19 3 19 21"/></svg>`;
+
+function buildVCard(v,i){
+  const c=document.createElement('div');c.className='vcard';c.id='vc-'+i;
+  const lc=(2300+i*177+Math.floor(Math.random()*1000)).toLocaleString('fr-FR');
+  c.innerHTML=`
+    <div class="vbg"><div class="vgrad" style="background:linear-gradient(160deg,${v.c1},${v.c2})"></div>
+    <div style="position:absolute;inset:0;opacity:.06;background:repeating-linear-gradient(45deg,rgba(255,255,255,.5) 0,rgba(255,255,255,.5) 1px,transparent 0,transparent 50%) 0/20px 20px"></div></div>
+    <div class="villus">${v.emoji}</div>
+    <div class="voverlay"></div>
+    <div class="vprog"><div class="vprogfill" style="animation-delay:${Math.random()*-15}s"></div></div>
+    <div class="vcontent">
+      <div class="vcat">${v.cat}</div>
+      <div class="vtitle">${v.title}</div>
+      <div class="vdesc">${v.desc}</div>
+      <div class="vauthor">
+        <div class="vava">${v.ini}</div>
+        <span class="vaname">${v.author}</span>
+        <div class="vdur">▶ ${v.dur}</div>
+      </div>
+    </div>
+    <div class="vactions">
+      <div class="vact" id="vl-${i}" onclick="toggleLike(${i})">
+        <div class="vact-icon" id="vli-${i}">${HEART_SVG}</div>
+        <span class="vact-label" id="vlc-${i}">${lc}</span>
+      </div>
+      <div class="vact" onclick="openPanel('cmtPanel')">
+        <div class="vact-icon">${CMT_SVG}</div>
+        <span class="vact-label">${Math.floor(Math.random()*300+50)}</span>
+      </div>
+      <div class="vact" onclick="openPanel('sharePanel')">
+        <div class="vact-icon">${SHARE_SVG}</div>
+        <span class="vact-label">Partager</span>
+      </div>
+      <div class="vact" onclick="saveVid(${i})">
+        <div class="vact-icon" id="vs-${i}">${SAVE_SVG}</div>
+        <span class="vact-label">Sauver</span>
+      </div>
+    </div>`;
+  return c;
+}
+function toggleLike(i){
+  likes[i]=!likes[i];
+  const icon=document.getElementById('vli-'+i).querySelector('svg');
+  const lc=document.getElementById('vlc-'+i);
+  const base=2300+i*177;
+  if(likes[i]){icon.style.fill='#ff3b5c';icon.style.stroke='#ff3b5c';lc.textContent=(base+1).toLocaleString('fr-FR');updateXP(10);}
+  else{icon.style.fill='none';icon.style.stroke='#fff';lc.textContent=base.toLocaleString('fr-FR');}
+}
+function saveVid(i){
+  const svg=document.getElementById('vs-'+i).querySelector('svg');
+  svg.style.fill=svg.style.fill==='var(--navy)'?'none':'var(--navy)';
+  svg.style.stroke=svg.style.stroke==='var(--navy)'?'#fff':'var(--navy)';
+}
+
+function setupSwipe(){
+  const fw=document.getElementById('feedWrap');
+  fw.addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY;},{passive:true});
+  fw.addEventListener('touchend',e=>{const dy=touchStartY-e.changedTouches[0].clientY;if(Math.abs(dy)>50){if(dy>0)nextVid();else prevVid();}},{passive:true});
+  fw.addEventListener('wheel',e=>{if(!isAnim){if(e.deltaY>30)nextVid();else if(e.deltaY<-30)prevVid();}},{passive:true});
+}
+function updateDots(n){document.querySelectorAll('.vdot').forEach((d,i)=>d.className='vdot'+(i===n?' va':''));}
+function nextVid(){
+  if(isAnim||curVid>=VIDEOS.length-1)return;isAnim=true;
+  document.getElementById('swipeHint').style.display='none';
+  const cur=document.getElementById('vc-'+curVid),nxt=document.getElementById('vc-'+(curVid+1));
+  nxt.style.transition='none';nxt.style.transform='translateY(100%)';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    cur.style.transition='transform .38s cubic-bezier(.4,0,.2,1)';nxt.style.transition='transform .38s cubic-bezier(.4,0,.2,1)';
+    cur.style.transform='translateY(-100%)';nxt.style.transform='translateY(0)';
+    setTimeout(()=>{cur.style.transition='';isAnim=false;curVid++;updateDots(curVid);},400);
+  }));
+}
+function prevVid(){
+  if(isAnim||curVid<=0)return;isAnim=true;
+  const cur=document.getElementById('vc-'+curVid),prv=document.getElementById('vc-'+(curVid-1));
+  prv.style.transition='none';prv.style.transform='translateY(-100%)';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    cur.style.transition='transform .38s cubic-bezier(.4,0,.2,1)';prv.style.transition='transform .38s cubic-bezier(.4,0,.2,1)';
+    cur.style.transform='translateY(100%)';prv.style.transform='translateY(0)';
+    setTimeout(()=>{cur.style.transition='';isAnim=false;curVid--;updateDots(curVid);},400);
+  }));
+}
+
+// ==================== PANELS ====================
+function openPanel(id){if(id==='cmtPanel')renderCmts();document.getElementById(id).classList.add('open');}
+function closePanel(id){document.getElementById(id).classList.remove('open');}
+function renderCmts(){
+  const c=document.getElementById('cmt-list');c.innerHTML='';
+  COMMENTS.forEach(cm=>{
+    const d=document.createElement('div');d.className='cmt';
+    d.innerHTML=`<div class="cava" style="background:${cm.bg};color:${cm.c}">${cm.ini}</div>
+      <div><div class="cname">${cm.name}</div><div class="ctext">${cm.text}</div><div class="ctime">${cm.time}</div></div>`;
+    c.appendChild(d);
+  });
+}
+function postCmt(){
+  const inp=document.getElementById('cmtInput');if(!inp.value.trim())return;
+  COMMENTS.unshift({name:"Toi",ini:"TOI",bg:"#e8ecf9",c:"#0d1b4b",text:inp.value,time:"À l'instant"});
+  renderCmts();inp.value='';updateXP(5);
+}
+function shareAct(p){closePanel('sharePanel');toast('Partagé sur '+p+' !');}
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2400);
+}
+
+// ==================== FORMATIONS ====================
+function renderFormations(level){
+  const tabs=document.getElementById('levelTabs');tabs.innerHTML='';
+  [{id:'debut',label:'Débutant'},{id:'inter',label:'Intermédiaire'},{id:'avance',label:'Avancé'}].forEach(l=>{
+    const b=document.createElement('div');b.className='ltab'+(l.id===level?' active':'');b.textContent=l.label;
+    b.onclick=()=>renderFormations(l.id);tabs.appendChild(b);
+  });
+  const scroll=document.getElementById('formScroll');scroll.innerHTML='';
+  scroll.appendChild(buildCIBlock());
+  // Wire sliders after DOM insert
+  requestAnimationFrame(()=>{
+    ['ci-cap','ci-years','ci-rate'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.addEventListener('input',computeCI);
+    });
+    computeCI();
+  });
+  const list=document.createElement('div');list.className='flist';
+  (FORMATIONS[level]||[]).forEach(f=>{
+    const c=document.createElement('div');c.className='fcard';
+    const lvlMap={debut:'Débutant',inter:'Intermédiaire',avance:'Avancé'};
+    const lvlCls={debut:'lvl-d',inter:'lvl-i',avance:'lvl-a'}[f.level];
+    c.innerHTML=`
+      <div class="fbanner" style="background:${f.bg}">
+        <div class="fbanner-price">${f.price}</div>
+        <div class="fbanner-lvl ${lvlCls}">${lvlMap[f.level]}</div>
+      </div>
+      <div class="fbody">
+        <div class="ftitle">${f.title}</div>
+        <div class="fdesc">${f.desc}</div>
+        <div class="fmeta">
+          <div class="fauthor"><div class="fava" style="background:${f.fBg};color:${f.fC}">${f.fIni}</div><span class="faname">${f.formateur}</span></div>
+          <div class="fstats"><span class="fstat">${f.mods} mod.</span><span class="fstat">${f.dur}</span><span class="fstat">★ ${f.rating}</span></div>
+        </div>
+        <button class="fbtn ${f.level}" onclick="openCourse('${f.id}')">Accéder au cours →</button>
+      </div>`;
+    list.appendChild(c);
+  });
+  scroll.appendChild(list);
+}
+
+function buildCIBlock(){
+  const div=document.createElement('div');div.className='ci-block';
+  div.innerHTML=`<div class="ci-inner">
+    <div class="ci-badge">INVESTIS EN TOI</div>
+    <div class="ci-title">Ton savoir, comme un placement financier</div>
+    <div class="ci-sub">Plus tu t'entraînes, plus ta valeur augmente. Déplace les curseurs pour voir ton potentiel avec Fisca+.</div>
+    <div class="ci-plan-tabs">
+      <div class="ci-ptab active" id="cpt-debut" onclick="setCIPlan('debut')">9,95 €<br>Débutant</div>
+      <div class="ci-ptab" id="cpt-inter" onclick="setCIPlan('inter')">16,95 €<br>Interméd.</div>
+      <div class="ci-ptab" id="cpt-avance" onclick="setCIPlan('avance')">24,95 €<br>Avancé</div>
+    </div>
+    <div class="ci-stats3">
+      <div class="ci-s"><div class="ci-sv" id="ci-final">—</div><div class="ci-sl">Capital final</div></div>
+      <div class="ci-s"><div class="ci-sv" id="ci-gains">—</div><div class="ci-sl">Gains</div></div>
+      <div class="ci-s"><div class="ci-sv" id="ci-mult">—</div><div class="ci-sl">Multiplication</div></div>
+    </div>
+    <div class="ci-sliders">
+      <div class="ci-srow">
+        <span class="ci-slbl">Capital initial</span>
+        <input type="range" class="ci-range" id="ci-cap" min="500" max="20000" step="500" value="2000">
+        <span class="ci-sval" id="ci-cap-v">2 000 €</span>
+      </div>
+      <div class="ci-srow">
+        <span class="ci-slbl">Durée (années)</span>
+        <input type="range" class="ci-range" id="ci-years" min="1" max="30" step="1" value="10">
+        <span class="ci-sval" id="ci-years-v">10 ans</span>
+      </div>
+      <div class="ci-srow">
+        <span class="ci-slbl">Taux annuel</span>
+        <input type="range" class="ci-range" id="ci-rate" min="3" max="15" step="1" value="9">
+        <span class="ci-sval" id="ci-rate-v">9 %</span>
+      </div>
+    </div>
+    <div class="ci-chart-wrap"><canvas id="ci-chart"></canvas></div>
+    <div class="ci-legend">
+      <div class="ci-leg"><div class="ci-leg-dot" style="background:#fff"></div>Avec Fisca+ (composés)</div>
+      <div class="ci-leg"><div class="ci-leg-dot" style="background:rgba(255,255,255,.35);height:2px;border-top:2px dashed rgba(255,255,255,.35)"></div>Sans formation (simples)</div>
+    </div>
+    <button class="ci-btn" onclick="renderFormations('avance');document.getElementById('formScroll').scrollTo(0,500)">Voir la formation Avancée — 24,95 €/mois</button>
+  </div>`;
+  return div;
+}
+
+let ciActivePlan='debut';
+const CI_RATE={debut:0.06,inter:0.08,avance:0.10};
+
+function setCIPlan(plan){
+  ciActivePlan=plan;
+  ['debut','inter','avance'].forEach(p=>{
+    const el=document.getElementById('cpt-'+p);
+    if(el)el.className='ci-ptab'+(p===plan?' active':'');
+  });
+  computeCI();
+}
+
+function computeCI(){
+  if(typeof Chart==='undefined')return;
+  const capEl=document.getElementById('ci-cap');
+  const yEl=document.getElementById('ci-years');
+  const rEl=document.getElementById('ci-rate');
+  if(!capEl)return;
+  const C=parseInt(capEl.value);
+  const n=parseInt(yEl.value);
+  const r=parseInt(rEl.value)/100;
+  document.getElementById('ci-cap-v').textContent=C.toLocaleString('fr-FR')+' €';
+  document.getElementById('ci-years-v').textContent=n+' an'+(n>1?'s':'');
+  document.getElementById('ci-rate-v').textContent=Math.round(r*100)+' %';
+  const labels=[],comp=[],simple=[];
+  for(let y=0;y<=n;y++){
+    labels.push(y===0?'Départ':'An '+y);
+    comp.push(Math.round(C*Math.pow(1+r,y)));
+    simple.push(Math.round(C*(1+r*y)));
+  }
+  const fin=comp[n];
+  document.getElementById('ci-final').textContent=fin.toLocaleString('fr-FR')+' €';
+  document.getElementById('ci-gains').textContent=(fin-C).toLocaleString('fr-FR')+' €';
+  document.getElementById('ci-mult').textContent=(fin/C).toFixed(1)+'×';
+  const canvas=document.getElementById('ci-chart');if(!canvas)return;
+  if(ciChart){ciChart.destroy();ciChart=null;}
+  ciChart=new Chart(canvas,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Composés',data:comp,borderColor:'#fff',backgroundColor:'rgba(255,255,255,.12)',fill:true,tension:.35,pointRadius:0,borderWidth:2.5},
+      {label:'Simples',data:simple,borderColor:'rgba(255,255,255,.35)',backgroundColor:'rgba(255,255,255,.04)',fill:true,tension:0,pointRadius:0,borderWidth:1.5,borderDash:[5,4]}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+' : '+ctx.parsed.y.toLocaleString('fr-FR')+' €'}}},
+      scales:{
+        x:{ticks:{autoSkip:true,maxTicksLimit:7,color:'rgba(255,255,255,.5)',font:{size:10}},grid:{color:'rgba(255,255,255,.07)'},border:{display:false}},
+        y:{ticks:{color:'rgba(255,255,255,.5)',font:{size:10},callback:v=>v>=1000?Math.round(v/1000)+'k €':v+' €'},grid:{color:'rgba(255,255,255,.07)'},border:{display:false}}
+      }
+    }
+  });
+}
+
+// ==================== COURSE VIEWER ====================
+function openCourse(id){
+  curCourse=id;curModIdx=0;curCTab='mods';
+  const allF=[...FORMATIONS.debut,...FORMATIONS.inter,...FORMATIONS.avance];
+  const f=allF.find(x=>x.id===id);if(!f)return;
+  document.getElementById('ctitleEl').textContent=f.title;
+  document.getElementById('csubEl').textContent=f.mods+' modules · '+f.dur;
+  updateCProg(id);renderCourseBody(id,'mods');
+  document.getElementById('courseOv').classList.add('show');
+}
+function closeCourse(){document.getElementById('courseOv').classList.remove('show');}
+function showCTab(tab){
+  curCTab=tab;
+  ['mods','lesson','infos'].forEach(t=>{
+    const el=document.getElementById('ctab-'+t);if(el)el.className='ctab'+(t===tab?' active':'');
+  });
+  renderCourseBody(curCourse,tab);
+}
+function updateCProg(id){
+  const done=(completedMods[id]||[]).length;
+  const total=COURSE_MODULES[id]?COURSE_MODULES[id].length:8;
+  const pct=Math.round(done/total*100);
+  const circ=94.2;
+  document.getElementById('cprogCircle').style.strokeDashoffset=circ*(1-pct/100);
+  document.getElementById('cprogLabel').textContent=pct+'%';
+}
+
+const COURSE_MODULES={
+  "budget-base":["Pourquoi gérer son budget ?","Calculer ses revenus nets","Identifier ses dépenses","La règle 50/30/20","Les enveloppes budgétaires","Outils et applications","Construire son plan épargne","Quiz final"],
+  "epargne-base":["Introduction à l'épargne","Livret A et LDDS","PEL et CEL","Assurance-vie bases","Intérêts composés","Quiz final"],
+  "fiche-paie":["Anatomie d'une fiche de paie","Brut vs net","Cotisations sociales","CSG et CRDS","Avantages en nature"],
+  "retraite-bases":["Le système de retraite","Les trimestres","Base et complémentaire","Les réformes","Calculer sa pension","Préparer sa retraite","Quiz final"],
+  "bourse-etf":["Les bases de la bourse","Qu'est-ce qu'un ETF ?","ETF monde vs sectoriels","Stratégie DCA","Construire son portefeuille","Gérer le risque","Fiscalité des placements","Les erreurs à éviter","Analyser ses performances","Rebalancer","Investir en crise","Quiz final"],
+  "fiscalite-avancee":["PFU et option IR","PEA en détail","Assurance-vie multi-supports","LMNP et LMP","Optimiser son revenu","Défiscalisation","Transmission du patrimoine","SCI et holding","Optimiser le PER","Quiz final"],
+  "immo-locatif":["Fondamentaux investissement","Trouver le bon bien","Financement crédit","Régimes fiscaux","Calcul du rendement","Gestion locative","SCPI alternative","Optimiser fiscalité","Vacances et impayés","Démembrement","Revendre","SCI","Stratégie multi-biens","Colocation","Quiz final"],
+  "creer-entreprise":["Étapes de la création","Choisir son statut","Micro-entrepreneur","SASU et EURL","Fiscalité entreprise","Prévisionnel financier","Financement et aides","TVA essentiels","Protéger son patrimoine","Rémunération et dividendes","Quiz final"],
+  "patrimoine-global":["Audit patrimonial","Stratégie diversification","Optimisation fiscale","Holding patrimoniale","Démembrement","Donation et transmission","Assurance-vie succession","Fonds private equity","Non-cotés","SCPI","Protection conjoint","IS via salaire","Multi-enveloppes","Anticiper changements","Préparer succession","Pactes Dutreil","Outils gestion de fortune","SCI IS vs IR","Patrimoine international","Études de cas","Stratégie sur mesure","Quiz final"],
+  "trading-avance":["Analyse technique bases","Chandeliers japonais","Supports et résistances","RSI MACD Bollinger","Money management","Options call et put","Stratégies options","Trading algorithmique","Psychologie du trader","Backtesting","Gestion portefeuille actif","Fiscalité trading","CFD futures","Hedging","Crises financières","Système de trading","Risk management","Marchés institutionnels","Analyse fondamentale","Quiz final"],
+  "defi-crypto":["Bases de la DeFi","AMM et liquidités","Yield farming","Staking","Aave Compound","Risques DeFi","Bridges","NFT","Layer 2","Fiscalité crypto","Sécuriser son wallet","Déclarer aux impôts","Analyser un projet","Stablecoins","Crashes historiques","Allocation crypto","Airdrops","Quiz final"],
+  "lever-fonds":["Ecosystème startup","Bootstrapping vs financement","Business angels","Comment fonctionnent les VC","Pitch deck","Valorisation pre-money","Term sheet","Clauses importantes","Due diligence","Négocier son deal","Dilution cap table","BSPCE stock-options","Financement public","Crowdfunding ICO","Séries A B C","Exit IPO M&A"],
+};
+const COURSE_LESSON={
+  "budget-base":{title:"La règle 50/30/20",emoji:"💸",intro:"Développée par Elizabeth Warren, la règle 50/30/20 divise vos revenus nets en trois catégories simples pour épargner sans calculer chaque euro.",sections:[
+    {t:"Le principe",tx:"50% pour les besoins essentiels (loyer, courses, transports), 30% pour les envies et loisirs, 20% pour l'épargne et remboursement de dettes.",formula:{text:"Revenus nets × 0,20 = épargne mensuelle minimale",label:"Votre objectif mensuel"},cards:[{t:"Automatiser le 20%",b:"Un virement automatique dès le salaire vers le Livret A évite de 'voir' cet argent et de le dépenser."},{t:"Adapter les ratios",b:"Si vos charges dépassent 50%, c'est normal en grande ville. Visez progressivement à réduire ce ratio."}]},
+    {t:"Comparaison des méthodes",tx:"Il existe plusieurs approches budgétaires complémentaires.",table:{h:["Méthode","Épargne","Complexité"],r:[["50/30/20","20%","Faible"],["Base zéro","Variable","Élevée"],["Enveloppes","Variable","Moyenne"]]}},
+  ]},
+  "patrimoine-global":{title:"La holding patrimoniale",emoji:"👑",intro:"La holding patrimoniale est la structure privilégiée pour optimiser la fiscalité des revenus et faciliter la transmission d'un patrimoine important.",sections:[
+    {t:"Pourquoi créer une holding ?",tx:"Une holding détient des participations dans d'autres sociétés et crée une couche entre vous et vos actifs.",formula:{text:"Dividende filiale → Holding : ~1,25% d'imposition effective",label:"Régime mère-fille (IS 25% × 5% quote-part)"},cards:[{t:"Régime mère-fille",b:"Seule une quote-part de 5% est réintégrée au résultat imposable. Imposition effective sur dividendes : 1,25% au lieu de 30%."},{t:"Réinvestissement sans friction",b:"Les profits peuvent être réinvestis via la holding sans subir le PFU de 30%. Puissant effet de capitalisation."}]},
+    {t:"Les schémas classiques",tx:"Plusieurs structures selon vos objectifs.",table:{h:["Objectif","Structure","Avantage"],r:[["Réinvestir","Holding IS + filiale","Capitalisation à 1,25%"],["Transmission","Pacte Dutreil","Exonération 75%"],["Immobilier","Holding + SCI IS","Amortissement + dividendes"],["Protection","Actifs cloisonnés","Séparation des risques"]]}},
+  ]},
+};
+
+function renderCourseBody(id,tab){
+  const body=document.getElementById('courseBody');body.innerHTML='';
+  if(tab==='mods'){
+    const mods=COURSE_MODULES[id]||['Module 1','Module 2','Module 3','Module 4','Module 5'];
+    mods.forEach((m,i)=>{
+      const done=(completedMods[id]||[]).includes(i);
+      const isCur=i===curModIdx;
+      const isLocked=!done&&i>(completedMods[id]||[]).length;
+      const d=document.createElement('div');
+      d.className='mod-item'+(done?' done':isCur?' cur':'');
+      d.innerHTML=`<div class="mod-num">${done?'✓':i+1}</div>
+        <div><div class="mod-title">${m}</div><div class="mod-dur">~15 min</div></div>
+        <div class="mod-action">${done?'✅':isLocked?'🔒':'▶'}</div>`;
+      if(!isLocked){d.onclick=()=>{curModIdx=i;showCTab('lesson');if(!(completedMods[id]||[]).includes(i)){completedMods[id]=completedMods[id]||[];completedMods[id].push(i);updateXP(20);updateCProg(id);}};}
+      body.appendChild(d);
+    });
+  } else if(tab==='lesson'){
+    const lesson=COURSE_LESSON[id]||{title:"Introduction",emoji:"📖",intro:"Ce module vous présente les fondamentaux du sujet.",sections:[{t:"Contenu du module",tx:"Explorez les modules dans l'onglet Modules pour débloquer chaque leçon.",cards:[{t:"Comment progresser",b:"Cliquez sur un module déverrouillé pour accéder à son contenu et gagner 20 XP par module."}]}]};
+    const hero=document.createElement('div');hero.className='lesson-hero';
+    hero.innerHTML=`<div class="lesson-hero-bg">${lesson.emoji}</div><h3>${lesson.title}</h3><p>${lesson.intro}</p>`;
+    body.appendChild(hero);
+    lesson.sections.forEach(sec=>{
+      const sd=document.createElement('div');sd.className='lsec';
+      sd.innerHTML=`<div class="lsec-title">${sec.t}</div><p class="ltext">${sec.tx}</p>`;
+      if(sec.formula)sd.innerHTML+=`<div class="lformula"><div class="lformula-t">${sec.formula.text}</div><div class="lformula-l">${sec.formula.label}</div></div>`;
+      if(sec.cards)sec.cards.forEach(card=>{sd.innerHTML+=`<div class="lcard"><div class="lcard-t">${card.t}</div><div class="lcard-b">${card.b}</div></div>`;});
+      if(sec.tip)sd.innerHTML+=`<div class="ltip"><span style="font-size:16px;flex-shrink:0">${sec.tip.icon}</span><span class="ltip-text">${sec.tip.text}</span></div>`;
+      if(sec.table){let tbl=`<table class="ltable"><thead><tr>${sec.table.h.map(h=>'<th>'+h+'</th>').join('')}</tr></thead><tbody>`;sec.table.r.forEach(r=>{tbl+=`<tr>${r.map(c=>'<td>'+c+'</td>').join('')}</tr>`;});tbl+='</tbody></table>';sd.innerHTML+=tbl;}
+      body.appendChild(sd);
+    });
+    const doneBtn=document.createElement('button');doneBtn.className='lesson-done-btn';doneBtn.textContent='Marquer comme terminé ✓';
+    doneBtn.onclick=()=>{
+      const mods=COURSE_MODULES[id]||[];
+      completedMods[id]=completedMods[id]||[];
+      if(!completedMods[id].includes(curModIdx))completedMods[id].push(curModIdx);
+      updateXP(20);updateCProg(id);
+      if(curModIdx<mods.length-1){curModIdx++;showCTab('mods');}
+      else{toast('Formation terminée ! +100 XP');updateXP(100);closeCourse();}
+    };
+    body.appendChild(doneBtn);
+  } else {
+    const allF=[...FORMATIONS.debut,...FORMATIONS.inter,...FORMATIONS.avance];
+    const f=allF.find(x=>x.id===id);if(!f)return;
+    body.innerHTML=`
+      <div style="background:var(--navy);border-radius:var(--radius);padding:18px;margin-bottom:14px">
+        <div style="font-family:var(--font);font-weight:700;font-size:17px;color:#fff;font-style:italic;margin-bottom:4px">${f.title}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.7);font-family:var(--font)">${f.desc}</div>
+      </div>
+      <div style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:10px">
+        <div style="font-family:var(--font);font-weight:700;font-size:13px;color:var(--navy);margin-bottom:10px">Votre formateur</div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:50%;background:${f.fBg};color:${f.fC};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;font-family:var(--font)">${f.fIni}</div>
+        <div><div style="font-weight:600;color:var(--navy);font-family:var(--font)">${f.formateur}</div><div style="font-size:12px;color:var(--text2);font-family:var(--font)">Expert certifié</div></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--border);padding:13px;text-align:center"><div style="font-family:var(--font);font-weight:700;font-size:20px;color:var(--navy)">${f.mods}</div><div style="font-size:11px;color:var(--text3);font-family:var(--font)">Modules</div></div>
+        <div style="background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--border);padding:13px;text-align:center"><div style="font-family:var(--font);font-weight:700;font-size:20px;color:var(--navy)">${f.dur}</div><div style="font-size:11px;color:var(--text3);font-family:var(--font)">Durée</div></div>
+        <div style="background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--border);padding:13px;text-align:center"><div style="font-family:var(--font);font-weight:700;font-size:20px;color:var(--navy)">★ ${f.rating}</div><div style="font-size:11px;color:var(--text3);font-family:var(--font)">Note</div></div>
+        <div style="background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--border);padding:13px;text-align:center"><div style="font-family:var(--font);font-weight:700;font-size:18px;color:var(--navy)">${f.price}</div><div style="font-size:11px;color:var(--text3);font-family:var(--font)">Prix</div></div>
+      </div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
